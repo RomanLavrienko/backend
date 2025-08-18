@@ -17,6 +17,7 @@ from typing import Union
 import os
 import secrets
 from infrastructure.repositiry.db_models import ContactRequestORM
+from infrastructure.services.verification_service import VerificationService
 
 SECRET_KEY = "supersecretkey"
 ALGORITHM = "HS256"
@@ -380,47 +381,6 @@ async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 
-@router.post("/api/register")
-async def register(
-        name: str = Form(...),
-        email: str = Form(...),
-        nickname: str = Form(...),
-        password: str = Form(...),
-        password_confirm: str = Form(...),
-        specification: str = Form("")
-):
-    if password != password_confirm:
-        return JSONResponse({"error": "Пароли не совпадают"}, status_code=400)
-    async with AsyncSessionLocal() as session:
-        user_service = UserService(session)
-        auth_service = AuthService(secret_key=SECRET_KEY, user_repo=user_service.user_repo)
-        try:
-            await auth_service.register(name=name, email=email, nickname=nickname, password=password,
-                                        specification=specification)
-            token = await auth_service.login(email, password)
-            resp = JSONResponse({"success": True})
-            resp.set_cookie("access_token", token, httponly=True, max_age=60 * 60 * 24 * 7)
-            return resp
-        except ValueError as e:
-            return JSONResponse({"error": str(e)}, status_code=400)
-
-
-@router.post("/api/login")
-async def login(
-        response: Response,
-        email: str = Form(...),
-        password: str = Form(...)
-):
-    try:
-        async with AsyncSessionLocal() as session:
-            user_repo = UserRepository(session)
-            auth_service = AuthService(secret_key=SECRET_KEY, user_repo=user_repo)
-            token = await auth_service.login(email, password)
-        resp = JSONResponse({"success": True})
-        resp.set_cookie("access_token", token, httponly=True, max_age=60 * 60 * 24 * 7)
-        return resp
-    except ValueError as e:
-        return JSONResponse({"error": str(e)}, status_code=400)
 
 
 @router.get("/profile", response_class=HTMLResponse)
@@ -492,7 +452,7 @@ async def profile(request: Request, access_token: str = Cookie(None)):
                 })
             return templates.TemplateResponse("profile.html", {"request": request, "user": user, "orders": orders,
                                                                "active_exec": active_exec, "reviews": reviews_data,
-                                                               "current_user_id": user_orm.id})
+                                                               "current_user_id": user_orm.id, "description": user.description})
     except Exception:
         return RedirectResponse("/login")
 
@@ -913,7 +873,8 @@ async def order_page(order_id: int, request: Request, access_token: str = Cookie
             "customer": customer,
             "category": category,
             "order_term": order.term if hasattr(order, 'term') else None,
-            "is_favorite": is_favorite
+            "is_favorite": is_favorite,
+            "description": order.description if hasattr(order, 'description') else None,
         })
 
 
@@ -988,6 +949,92 @@ async def start_chat(user_id: int, access_token: str = Cookie(None)):
         # user_id — это собеседник (customer/executor)
         chat = await chat_service.get_or_create_chat_between_users(user.id, user_id)
         return JSONResponse({"chat_id": chat.id})
+
+@router.get("/verify_phone", response_class=HTMLResponse)
+async def phone_verification_page(request: Request, access_token: str = Cookie(None)):
+    if not access_token:
+        return RedirectResponse("/login")
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        nickname = payload.get("sub")
+    except Exception:
+        return RedirectResponse("/login")
+    return templates.TemplateResponse("phone_verification.html", {
+        "request": request,
+        "code_sent": False
+    })
+
+@router.post("/verify_phone")
+async def send_verification_code(
+    request: Request,
+    phone: str = Form(...),
+    access_token: str = Cookie(None)
+):
+    if not access_token:
+        return RedirectResponse("/login")
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        nickname = payload.get("sub")
+    except Exception:
+        return RedirectResponse("/login")
+    async with AsyncSessionLocal() as session:
+        service = VerificationService(session)
+        await service.send_phone_code(phone)
+        return templates.TemplateResponse("phone_verification.html", {
+            "request": request,
+            "code_sent": True,
+            "phone": phone
+        })
+
+
+@router.post("/verify_code")
+async def verify_phone_code(
+        request: Request,
+        phone: str = Form(...),
+        code: str = Form(...),
+        access_token: str = Cookie(None),
+):
+    if not access_token:
+        return RedirectResponse("/login")
+    try:
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        nickname = payload.get("sub")
+    except Exception:
+        return RedirectResponse("/login")
+
+    # Используем ОДНУ сессию для всех операций
+    async with AsyncSessionLocal() as session:
+        # 1. Получаем пользователя
+        user_service = UserService(session)
+        user = await user_service.get_user_by_nickname(nickname)
+        if not user:
+            return RedirectResponse("/login")
+
+        # 2. Проверяем код
+        service = VerificationService(session)
+        if await service.verify_phone_code(phone, code):
+            # 3. Обновляем пользователя в ТОЙ ЖЕ сессии
+            user.phone_verified = True
+            user.phone_number = phone
+
+            # 4. Фиксируем изменения
+            await session.commit()
+            return RedirectResponse("/profile", status_code=303)
+        else:
+            return JSONResponse({"error": "Неверный код"}, status_code=400)
+
+@router.post("/admin/user/{user_id}/admin_verify")
+async def admin_verify_user(
+    user_id: int,
+    admin_session: str = Cookie(None)
+):
+    if admin_session != ADMIN_COOKIE and admin_session != 'admin':
+        return RedirectResponse("/admin", status_code=303)
+    async with AsyncSessionLocal() as session:
+        from infrastructure.repositiry.verification_repository import VerificationRepository
+        repo = VerificationRepository(session)
+        await repo.verify_by_admin(user_id)
+    return RedirectResponse("/admin/panel", status_code=303)
 
 
 @router.get("/admin", response_class=HTMLResponse)

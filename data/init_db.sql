@@ -1,7 +1,7 @@
 -- users
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(15) NOT NULL,
     nickname VARCHAR(10) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(100) NOT NULL,
@@ -18,6 +18,9 @@ CREATE TABLE users (
     photo VARCHAR(255),
     balance FLOAT DEFAULT 0.0,
     is_support BOOLEAN DEFAULT FALSE,
+    phone_verified BOOLEAN DEFAULT FALSE COMMENT 'Верификация по номеру телефона',
+    admin_verified BOOLEAN DEFAULT FALSE COMMENT 'Верификация администрацией',
+    phone_number VARCHAR(20) COMMENT 'Номер телефона в формате E.164',
     INDEX idx_users_created_at (created_at),
     INDEX idx_users_customer_rating (customer_rating),
     INDEX idx_users_executor_rating (executor_rating)

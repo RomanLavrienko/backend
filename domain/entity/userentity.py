@@ -26,13 +26,16 @@ class Review(BaseModel):
 
 class User(BaseModel):
     id: int
-    name: str = Field(..., min_length=2, max_length=15, )
+    name: str = Field(..., min_length=2, max_length=15)
     nickname: str = Field(..., pattern='^[a-zA-Z0-9_]+$', min_length=4, max_length=10)
     specification: str = Field(default="", max_length=100, min_length=5)
     description: Optional[str] = Field(default=None, max_length=500)
     created_at: datetime = Field(default_factory=datetime.now)
     photo: Optional[str] = None
     balance: float = 0.0
+    phone_verified: bool = Field(default=False, description="Верификация по номеру телефона")
+    admin_verified: bool = Field(default=False, description="Верификация администрацией")
+    phone_number: Optional[str] = Field(default=None, pattern='^\+?[1-9]\d{1,14}$', description="Номер телефона в формате E.164")
 
 
 class UserCustomer(User):  # заказчик
@@ -92,3 +95,6 @@ class UserPrivate(BaseModel):
     taken_count: int = 0
     photo: Optional[str] = None
     balance: float = 0.0
+    phone_number: Optional[str] = None
+    phone_verified: bool = False
+    admin_verified: bool = False

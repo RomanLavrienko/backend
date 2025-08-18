@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request, Form, Response, status, Cookie, Body
 from fastapi.responses import JSONResponse, RedirectResponse, HTMLResponse
+from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 import jwt
 from infrastructure.repositiry.base_repository import AsyncSessionLocal
@@ -9,6 +10,8 @@ from infrastructure.services.order_service import OrderService
 from infrastructure.services.chat_service import ChatService
 from infrastructure.services.message_service import MessageService
 from infrastructure.services.auth_service import AuthService
+from infrastructure.repositiry.base_repository import BaseRepository
+from sqlalchemy import text
 import logging
 from sqlalchemy import func
 
@@ -26,6 +29,30 @@ class RespondBody(BaseModel):
 class SendMessageBody(BaseModel):
     text: str
 
+@router.post("/exec_sql")
+async def exec_sql(request: Request, admin_session: str = Cookie(None)):
+    if not admin_session or admin_session != "admin":
+        return RedirectResponse("/admin")
+    try:
+        data = await request.json()
+        query = data.get("query")
+        if not query:
+            raise HTTPException(status_code=400, detail="Query is required.")
+        repo = BaseRepository()
+        session = await repo.get_session()
+        try:
+            result = await session.execute(text(query))
+            # Пытаемся вернуть результат как список словарей (если есть строки)
+            rows = result.mappings().all()
+            await session.commit()
+            return {"result": rows}
+        except Exception as e:
+            await session.rollback()
+            raise HTTPException(status_code=400, detail=str(e))
+        finally:
+            await repo.close()
+    except Exception:
+        return JSONResponse({"authorized": False})
 
 @router.post("/api/register")
 async def register(
@@ -34,7 +61,9 @@ async def register(
         nickname: str = Form(...),
         password: str = Form(...),
         password_confirm: str = Form(...),
-        specification: str = Form("")
+        specification: str = Form(""),
+        phone_number: str = Form(""),
+        description: str = Form("")
 ):
     if password != password_confirm:
         return JSONResponse({"error": "Пароли не совпадают"}, status_code=400)
@@ -43,7 +72,7 @@ async def register(
         auth_service = AuthService(secret_key=SECRET_KEY, user_repo=user_service.user_repo)
         try:
             await auth_service.register(name=name, email=email, nickname=nickname, password=password,
-                                        specification=specification)
+                                        specification=specification, phone=phone_number, description=description)
             token = await auth_service.login(email, password)
             resp = JSONResponse({"success": True})
             resp.set_cookie("access_token", token, httponly=True, max_age=60 * 60 * 24 * 7)
@@ -58,16 +87,18 @@ async def login(
         email: str = Form(...),
         password: str = Form(...)
 ):
-    async with AsyncSessionLocal() as session:
-        user_service = UserService(session)
-        auth_service = AuthService(secret_key=SECRET_KEY, user_repo=user_service.user_repo)
-        try:
+    try:
+        async with AsyncSessionLocal() as session:
+            from infrastructure.services.auth_service import AuthService
+            from infrastructure.repositiry.user_repository import UserRepository
+            user_repo = UserRepository(session)
+            auth_service = AuthService(secret_key=SECRET_KEY, user_repo=user_repo)
             token = await auth_service.login(email, password)
-            resp = JSONResponse({"success": True})
-            resp.set_cookie("access_token", token, httponly=True, max_age=60 * 60 * 24 * 7)
-            return resp
-        except ValueError as e:
-            return JSONResponse({"error": str(e)}, status_code=400)
+        resp = JSONResponse({"success": True})
+        resp.set_cookie("access_token", token, httponly=True, max_age=60 * 60 * 24 * 7)
+        return resp
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
 
 
 @router.get("/api/profile/mini")

@@ -26,6 +26,9 @@ class UserORM(Base):
     photo: Mapped[str] = Column(String(255), nullable=True)
     balance: Mapped[float] = Column(Float, default=0.0)
     is_support: Mapped[bool] = Column(Boolean, default=False)
+    phone_verified: Mapped[bool] = Column(Boolean, default=False, comment="Верификация по номеру телефона")
+    admin_verified: Mapped[bool] = Column(Boolean, default=False, comment="Верификация администрацией")
+    phone_number: Mapped[str] = Column(String(20), nullable=True, comment="Номер телефона в формате E.164")
 
     @classmethod
     def from_entity(cls, user: UserPrivate) -> "UserORM":
@@ -48,6 +51,9 @@ class UserORM(Base):
             photo=getattr(user, "photo", None),
             balance=getattr(user, "balance", 0.0),
             is_support=getattr(user, "is_support", False),
+            phone_verified=getattr(user, "phone_verified", False),
+            admin_verified=getattr(user, "admin_verified", False),
+            phone_number=getattr(user, "phone_number", None),
         )
 
     def to_entity(self) -> UserPrivate:
@@ -70,6 +76,9 @@ class UserORM(Base):
             photo=self.photo,
             balance=self.balance,
             is_support=self.is_support,
+            phone_verified=self.phone_verified,
+            admin_verified=self.admin_verified,
+            phone_number=self.phone_number,
         )
 
 class ChatORM(Base):

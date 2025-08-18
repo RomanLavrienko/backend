@@ -27,7 +27,7 @@ class AuthService:
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return pwd_context.verify(plain_password, hashed_password)
 
-    async def register(self, name: str, email: str, nickname: str, password: str, specification: str) -> UserPrivate:
+    async def register(self, name: str, email: str, nickname: str, password: str, specification: str, phone: str, description: str) -> UserPrivate:
         if await self.user_repo.exists(email, nickname):
             raise ValueError("Пользователь с таким email или nickname уже существует")
         password_hash = self.hash_password(password)
@@ -36,7 +36,7 @@ class AuthService:
             nickname=nickname,
             email=email,
             specification=specification,
-            description=None,
+            description=description,
             created_at=datetime.utcnow(),
             password_hash=password_hash,
             jwt_token=None,
@@ -46,6 +46,7 @@ class AuthService:
             executor_rating=0.0,
             done_count=0,
             taken_count=0,
+            phone_number=phone
         )
         return await self.user_repo.create(user)
 

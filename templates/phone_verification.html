@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Подтверждение телефона</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="auth-container">
+        <div class="auth-card">
+            <h1>Подтверждение телефона</h1>
+
+            <form method="POST" action="/verify_phone">
+                <div class="form-group">
+                    <label>Номер телефона:</label>
+                    <input type="tel" name="phone" required>
+                </div>
+
+                <button type="submit" class="auth-button">Отправить код</button>
+            </form>
+
+            {% if code_sent %}
+            <form method="POST" action="/verify_code">
+                <div class="form-group">
+                    <label>Код подтверждения:</label>
+                    <input type="text" name="code" required>
+                    <input type="hidden" name="phone" value="{{ phone }}">
+                </div>
+
+                <button type="submit" class="auth-button">Подтвердить</button>
+            </form>
+            {% endif %}
+        </div>
+    </main>
+
+    {% include 'footer.html' %}
+</body>
+</html>

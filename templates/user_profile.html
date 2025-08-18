@@ -9,85 +9,100 @@
     <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    {% include 'header.html' %}
-    <main class="main-content">
-        <div class="profile-container" style="max-width:700px;margin:2.5rem auto;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.10);padding:2.5rem 2rem;">
-            <div style="display:flex;gap:2.5rem;align-items:flex-start;flex-wrap:wrap;">
-                <div style="flex:1 1 220px;min-width:200px;max-width:320px;">
-                    <div class="profile-avatar" style="width:90px;height:90px;border-radius:50%;background:#e0e0e0;margin-bottom:1.2em;">
-                        {% if user.photo %}
-                            <img src="/assets/images/{{ user.photo }}" alt="Фото профиля" style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
-                        {% endif %}
-                    </div>
-                    <h2 style="font-size:2rem;font-weight:700;margin-bottom:0.2em;">{{ user.name }}{% if user.is_support %} <span title="Служба поддержки" style="color:#1ed760;">✔</span>{% endif %}</h2>
-                    <div style="color:#1ed760;font-weight:500;margin-bottom:0.5em;">@{{ user.nickname }}</div>
-                    <div style="color:#888;font-size:1.1em;margin-bottom:1.2em;">На платформе с {{ user.created_at.strftime('%d.%m.%Y') if user.created_at else '' }}</div>
-                    <div style="margin-bottom:1.2em;">
-                        <span style="font-weight:500;">Рейтинг заказчика:</span> {{ customer_rating }}<br>
-                        <span style="font-weight:500;">Рейтинг исполнителя:</span> {{ executor_rating }}<br>
-                        <span style="font-weight:500;">Выполнено заказов:</span> {{ user.done_count or 0 }}<br>
-                        <span style="font-weight:500;">Взято заказов:</span> {{ user.taken_count or 0 }}
-                    </div>
-                </div>
-                <div style="flex:2 1 320px;min-width:260px;">
-                    <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:0.7em;">О себе</h3>
-                    {% if user.description %}
-                    <div style="font-size:1.1em;line-height:1.6;white-space:pre-line;">{{ user.description }}</div>
+{% include 'header.html' %}
+<main class="main-content">
+    <div class="profile-container"
+         style="max-width:700px;margin:2.5rem auto;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.10);padding:2.5rem 2rem;">
+        <div style="display:flex;gap:2.5rem;align-items:flex-start;flex-wrap:wrap;">
+            <div style="flex:1 1 220px;min-width:200px;max-width:320px;">
+                <div class="profile-avatar"
+                     style="width:90px;height:90px;border-radius:50%;background:#e0e0e0;margin-bottom:1.2em;">
+                    {% if user.photo %}
+                    <img src="/assets/images/{{ user.photo }}" alt="Фото профиля"
+                         style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
                     {% endif %}
-                    <div style="margin-top:2em;">
-                        <h3 style="font-size:1.1em;font-weight:700;margin-bottom:0.7em;">Заказы пользователя</h3>
-                        {% if orders and orders|length > 0 %}
-                            <ul style="padding-left:0;list-style:none;">
-                            {% for order in orders if order.status == 'OPEN' %}
-                                <li style="margin-bottom:1.2em;">
-                                    <a href="/orders/{{ order.id }}" style="font-weight:600;font-size:1.1em;">{{ order.name }}</a><br>
-                                    <span style="color:#888;">{{ order.description }}</span><br>
-                                    <span style="color:#1ed760;">{{ order.price }} ₽</span>
-                                </li>
-                            {% endfor %}
-                            </ul>
-                        {% else %}
-                            <div style="color:#888;">У пользователя пока нет заказов.</div>
-                        {% endif %}
-                    </div>
+                    {% if user.phone_verified %}
+                    <span title="Телефон подтверждён" class="verified-badge">📱</span>
+                    {% endif %}
+
+                    {% if user.admin_verified %}
+                    <span title="Профиль подтверждён администрацией" class="verified-badge admin">✅</span>
+                    {% endif %}
+                </div>
+                <h2 style="font-size:2rem;font-weight:700;margin-bottom:0.2em;">{{ user.name }}{% if user.is_support %}
+                    <span title="Служба поддержки" style="color:#1ed760;">✔</span>{% endif %}</h2>
+                <div style="color:#1ed760;font-weight:500;margin-bottom:0.5em;">@{{ user.nickname }}</div>
+                <div style="color:#888;font-size:1.1em;margin-bottom:1.2em;">На платформе с {{
+                    user.created_at.strftime('%d.%m.%Y') if user.created_at else '' }}
+                </div>
+                <div style="margin-bottom:1.2em;">
+                    <span style="font-weight:500;">Рейтинг заказчика:</span> {{ customer_rating }}<br>
+                    <span style="font-weight:500;">Рейтинг исполнителя:</span> {{ executor_rating }}<br>
+                    <span style="font-weight:500;">Выполнено заказов:</span> {{ user.done_count or 0 }}<br>
+                    <span style="font-weight:500;">Взято заказов:</span> {{ user.taken_count or 0 }}
+                </div>
+            </div>
+            <div style="flex:2 1 320px;min-width:260px;">
+                <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:0.7em;">О себе</h3>
+                {% if user.description %}
+                <div style="font-size:1.1em;line-height:1.6;white-space:pre-line;">{{ user.description }}</div>
+                {% endif %}
+                <div style="margin-top:2em;">
+                    <h3 style="font-size:1.1em;font-weight:700;margin-bottom:0.7em;">Заказы пользователя</h3>
+                    {% if orders and orders|length > 0 %}
+                    <ul style="padding-left:0;list-style:none;">
+                        {% for order in orders if order.status == 'OPEN' %}
+                        <li style="margin-bottom:1.2em;">
+                            <a href="/orders/{{ order.id }}" style="font-weight:600;font-size:1.1em;">{{ order.name
+                                }}</a><br>
+                            <span style="color:#888;">{{ order.description }}</span><br>
+                            <span style="color:#1ed760;">{{ order.price }} ₽</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div style="color:#888;">У пользователя пока нет заказов.</div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        <div class="profile-extra" style="margin-top:2.5em;">
-            <h3 style="font-size:1.1em;font-weight:700;margin-bottom:0.7em;">Отзывы о пользователе</h3>
-            {% if reviews and reviews|length > 0 %}
-            <div class="reviews-list">
-                {% for review in reviews %}
-                <div class="review-block" style="border:1px solid #eee; border-radius:8px; padding:1em; margin-bottom:1em;">
-                    <b>Оценка:</b> {{ review.rate }}<br>
-                    <b>Тип:</b> {{ review.type }}<br>
-                    <b>Текст:</b> {{ review.text }}<br>
-                    <b>Заказ:</b> <a href="/orders/{{ review.order_id }}">#{{ review.order_id }}</a><br>
-                    <span style="color:#888; font-size:0.95em;">{{ review.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
-                    {% if current_user_id and review.sender_id == current_user_id %}
-                        <button class="edit-review-btn" data-review-id="{{ review.id }}">Редактировать</button>
-                    {% endif %}
-                    {% if review.response %}
-                        <div style="margin-top:0.7em; padding:0.7em; background:#f6fff6; border-radius:6px; border:1px solid #b3e6b3;">
-                            <b>Ответ владельца профиля:</b> {{ review.response }}
-                        </div>
-                    {% elif current_user_id and user.id == current_user_id %}
-                        <form class="review-response-form" data-review-id="{{ review.id }}" style="margin-top:0.7em;">
-                            <textarea name="response" required minlength="2" maxlength="100" style="width:100%;min-height:40px;"></textarea><br>
-                            <button type="submit" class="apply-filters">Ответить на отзыв</button>
-                        </form>
-                    {% endif %}
+    </div>
+    <div class="profile-extra" style="margin-top:2.5em;">
+        <h3 style="font-size:1.1em;font-weight:700;margin-bottom:0.7em;">Отзывы о пользователе</h3>
+        {% if reviews and reviews|length > 0 %}
+        <div class="reviews-list">
+            {% for review in reviews %}
+            <div class="review-block" style="border:1px solid #eee; border-radius:8px; padding:1em; margin-bottom:1em;">
+                <b>Оценка:</b> {{ review.rate }}<br>
+                <b>Тип:</b> {{ review.type }}<br>
+                <b>Текст:</b> {{ review.text }}<br>
+                <b>Заказ:</b> <a href="/orders/{{ review.order_id }}">#{{ review.order_id }}</a><br>
+                <span style="color:#888; font-size:0.95em;">{{ review.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                {% if current_user_id and review.sender_id == current_user_id %}
+                <button class="edit-review-btn" data-review-id="{{ review.id }}">Редактировать</button>
+                {% endif %}
+                {% if review.response %}
+                <div style="margin-top:0.7em; padding:0.7em; background:#f6fff6; border-radius:6px; border:1px solid #b3e6b3;">
+                    <b>Ответ владельца профиля:</b> {{ review.response }}
                 </div>
-                {% endfor %}
+                {% elif current_user_id and user.id == current_user_id %}
+                <form class="review-response-form" data-review-id="{{ review.id }}" style="margin-top:0.7em;">
+                    <textarea name="response" required minlength="2" maxlength="100"
+                              style="width:100%;min-height:40px;"></textarea><br>
+                    <button type="submit" class="apply-filters">Ответить на отзыв</button>
+                </form>
+                {% endif %}
             </div>
-            {% else %}
-            <div style="color:#888;">Пока нет отзывов.</div>
-            {% endif %}
+            {% endfor %}
         </div>
-    </main>
-    {% include 'footer.html' %}
-    <script src="/assets/js/main.js"></script>
-    <script>
+        {% else %}
+        <div style="color:#888;">Пока нет отзывов.</div>
+        {% endif %}
+    </div>
+</main>
+{% include 'footer.html' %}
+<script src="/assets/js/main.js"></script>
+<script>
     // Редактирование отзыва
     document.querySelectorAll('.edit-review-btn').forEach(btn => {
         btn.onclick = function() {
@@ -127,6 +142,6 @@
             if (resp.ok) location.reload(); else alert('Ошибка!');
         };
     });
-    </script>
+</script>
 </body>
 </html> 

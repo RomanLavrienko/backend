@@ -1320,3 +1320,12 @@ body {
     user-select: none;
     -webkit-user-select: none;
 }
+
+.verified-badge {
+    color: green;
+    margin-left: 5px;
+}
+
+.verified-badge.admin {
+    color: blue;
+}
