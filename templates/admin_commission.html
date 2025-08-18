@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Настройки комиссий</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        label { display: block; margin-top: 1em; }
+        input { width: 120px; padding: 0.3em; }
+        button { margin-top: 2em; padding: 0.7em 2em; font-size: 1.1em; }
+    </style>
+</head>
+<body>
+    <h1>Настройки комиссий</h1>
+    <form method="post" action="/admin/commission">
+        <label>Комиссия на вывод (%):
+            <input type="number" step="0.01" name="commission_withdraw" value="{{ commission.commission_withdraw or 3.0 }}">
+        </label>
+        <label>Комиссия для заказчика (%):
+            <input type="number" step="0.01" name="commission_customer" value="{{ commission.commission_customer or 10.0 }}">
+        </label>
+        <label>Комиссия для исполнителя (%):
+            <input type="number" step="0.01" name="commission_executor" value="{{ commission.commission_executor or 5.0 }}">
+        </label>
+        <label>Плата за публикацию заказа (руб):
+            <input type="number" step="1" name="commission_post_order" value="{{ commission.commission_post_order or 200 }}">
+        </label>
+        <label>Порог для платного отклика (руб):
+            <input type="number" step="1" name="commission_response_threshold" value="{{ commission.commission_response_threshold or 5000 }}">
+        </label>
+        <label>Комиссия за отклик (%):
+            <input type="number" step="0.01" name="commission_response_percent" value="{{ commission.commission_response_percent or 1.0 }}">
+        </label>
+        <button type="submit">Сохранить</button>
+    </form>
+    <p><a href="/admin/panel">← В админку</a></p>
+</body>
+</html> 

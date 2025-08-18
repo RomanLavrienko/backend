@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заказы | TeenFreelance</title>
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .orders-list-container { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.10); padding: 2.5rem 2rem; min-height: 600px; max-width: 900px; margin: 2rem auto; }
+        .orders-filters { background: none; border-radius: 0; box-shadow: none; padding: 0; margin-bottom: 2rem; max-width: none; }
+        .orders-grid { margin: 0; }
+        .create-order-btn {
+            display: inline-block;
+            background: #1ed760;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 0.9rem 2.2rem;
+            font-size: 1.1em;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(30,215,96,0.08);
+            transition: background 0.15s;
+        }
+        .create-order-btn:hover {
+            background: #16b34a;
+        }
+        .popular-orders {
+            margin: 2.5em 0;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .popular-orders h2 {
+            text-align: center;
+            font-size: 2.1em;
+            font-weight: 700;
+            margin-bottom: 1.5em;
+        }
+        .popular-orders-grid {
+            display: flex;
+            gap: 2em;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3em;
+        }
+        .order-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            padding: 2em 2em;
+            max-width: 320px;
+            min-width: 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .order-badge {
+            position: absolute;
+            top: 1.2em;
+            right: 1.2em;
+            color: #fff;
+            padding: 0.3em 1.1em;
+            border-radius: 1em;
+            font-size: 1em;
+            font-weight: 600;
+        }
+        .badge-new {
+            background: #1ed760;
+        }
+        .badge-urgent {
+            background: #ff5c5c;
+        }
+        .badge-premium {
+            background: #ffb300;
+        }
+        .order-card b {
+            font-size: 1.25em;
+            margin-bottom: 0.5em;
+        }
+        .order-card div {
+            color: #888;
+            margin: 0.7em 0;
+            text-align: center;
+        }
+        .order-price {
+            color: #1ed760;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .auth-button {
+            display: inline-block;
+            background: #1ed760;
+            color: #fff;
+            padding: 0.7em 1.5em;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 1.5em;
+            transition: background 0.2s;
+        }
+        .auth-button:hover {
+            background: #16b34a;
+        }
+    </style>
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content">
+        <section class="popular-orders">
+            <h2>Популярные заказы</h2>
+            <div class="popular-orders-grid">
+                {% for order in new_orders %}
+                <div class="order-card" onclick="window.location.href='/orders/{{ order.id }}'">
+                    <span class="order-badge badge-new">Новый</span>
+                    <b>{{ order.name }}</b>
+                    <div>{{ order.description }}</div>
+                    <div class="order-price">{{ order.price }} руб.</div>
+                    <div>Срок: {{ order.term }} {{ 'день' if order.term == 1 else 'дней' }}</div>
+                    <a href="/orders/{{ order.id }}" class="auth-button">Откликнуться</a>
+                </div>
+                {% endfor %}
+                {% for order in urgent_orders %}
+                <div class="order-card" onclick="window.location.href='/orders/{{ order.id }}'">
+                    <span class="order-badge badge-urgent">Срочно</span>
+                    <b>{{ order.name }}</b>
+                    <div>{{ order.description }}</div>
+                    <div class="order-price">{{ order.price }} руб.</div>
+                    <div>Срок: {{ order.term }} {{ 'день' if order.term == 1 else 'дней' }}</div>
+                    <a href="/orders/{{ order.id }}" class="auth-button">Откликнуться</a>
+                </div>
+                {% endfor %}
+                {% for order in premium_orders %}
+                <div class="order-card" onclick="window.location.href='/orders/{{ order.id }}'">
+                    <span class="order-badge badge-premium">Премиум</span>
+                    <b>{{ order.name }}</b>
+                    <div>{{ order.description }}</div>
+                    <div class="order-price">{{ order.price }} руб.</div>
+                    <div>Срок: {{ order.term }} {{ 'день' if order.term == 1 else 'дней' }}</div>
+                    <a href="/orders/{{ order.id }}" class="auth-button">Откликнуться</a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        <div class="orders-list-container">
+            <div class="orders-filters">
+                <div style="text-align:left; margin-bottom:1.2rem;">
+                    <span style="font-size:2.1rem; font-weight:700; color:#1ed760; display:block; line-height:1.1;">Хотите разместить заказ?</span>
+                    <span style="font-size:1.15rem; color:#222; display:block; margin-top:0.3rem;">Создайте его прямо сейчас — это бесплатно и быстро!</span>
+                </div>
+                <form method="get" id="orders-filters-form">
+                    <div class="filters-container" style="display:flex; gap:2.5rem; align-items:flex-start; flex-wrap:wrap;">
+                        <div style="flex:1 1 260px; min-width:220px; max-width:320px; display:flex; flex-direction:column; gap:1.1rem;">
+                            <a href="/orders/create" class="create-order-btn" style="margin-bottom:0; width:100%;">Создать заказ</a>
+                            <div class="filter-group">
+                                <h3>Категории</h3>
+                                <select name="category_id" id="category_id_select" onchange="if(this.value===''){this.removeAttribute('name')}else{this.setAttribute('name','category_id')}">
+                                    <option value="">Все категории</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if request.query_params.get('category_id') == category.id|string %}selected{% endif %}>{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <h3>Сортировка</h3>
+                                <select name="sort_by">
+                                    <option value="date" {% if request.query_params.get('sort_by', 'date') == 'date' %}selected{% endif %}>По дате</option>
+                                    <option value="price" {% if request.query_params.get('sort_by') == 'price' %}selected{% endif %}>По цене (дорогие)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="flex:1 1 220px; min-width:200px; max-width:320px; display:flex; flex-direction:column; gap:1.1rem;">
+                            <div class="filter-group">
+                                <h3>Бюджет</h3>
+                                <div class="price-range">
+                                    <label for="min_price" style="font-size:0.95em;">от</label>
+                                    <input type="range" min="0" max="50000" name="min_price" id="min_price" value="{{ request.query_params.get('min_price', 0) }}" oninput="document.getElementById('min_price_val').innerText=this.value">
+                                    <span id="min_price_val">{{ request.query_params.get('min_price', 0) }}</span> ₽
+                                    <br>
+                                    <label for="max_price" style="font-size:0.95em;">до</label>
+                                    <input type="range" min="0" max="50000" name="max_price" id="max_price" value="{{ request.query_params.get('max_price', 50000) }}" oninput="document.getElementById('max_price_val').innerText=this.value">
+                                    <span id="max_price_val">{{ request.query_params.get('max_price', 50000) }}</span> ₽
+                                </div>
+                            </div>
+                            <button type="submit" class="apply-filters" style="margin-top:1.2rem; width:100%; max-width:220px; align-self:flex-end;">Применить</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="orders-grid">
+                {% for order in orders %}
+                <div class="order-card-new" onclick="window.location.href='/orders/{{ order.id }}'">
+                    <div class="order-icon">
+                        {% if order.customer_photo %}
+                            <img src="/assets/images/{{ order.customer_photo }}" alt="Фото профиля" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+                        {% else %}
+                            A
+                        {% endif %}
+                    </div>
+                    <div class="order-content-new" style="position:relative;">
+                        <h3 class="order-title">{{ order.title }}</h3>
+                        <span style="position:absolute; right:0; top:0; color:#888; font-size:1.05em;">Имя заказчика: {{ order.customer_name }}</span>
+                        <p class="order-description-new" style="word-break: break-word;">{{ order.description }}</p>
+                        <div class="order-meta-new">
+                            <span>Бюджет: {{ order.price }} руб.</span>
+                            <span>Откликов: {{ order.responses }}</span>
+                            <span>Категория: {{ order.category }}</span>
+                        </div>
+                    </div>
+                    <div class="order-action-new">
+                        <span class="order-time">Время выполнения: {{ order.deadline }}</span>
+                        {% if order.customer == current_nickname %}
+                        <button class="cancel-order-btn-new" onclick="event.stopPropagation(); if(confirm('Вы уверены, что хотите отменить заказ?')){ fetch('/orders/{{ order.id }}/close', {method: 'POST', credentials: 'same-origin'}).then(()=>location.reload()); }">Отменить заказ</button>
+                        {% else %}
+                        <button class="respond-button-new" onclick="event.stopPropagation(); openRespondModal({{ order.id }})">Откликнуться</button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <!-- Пагинация -->
+            {% if total_count > page_size %}
+            <div id="orders-pagination" style="display:flex; justify-content:center; margin-top:2.5rem; gap:0.5rem;">
+                {% set total_pages = (total_count // page_size) + (1 if total_count % page_size else 0) %}
+                {% if page > 1 %}
+                    <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{k}}={{v}}&{% endfor %}page={{page-1}}" class="pagination-btn" style="padding:0.5em 1.1em; border-radius:6px; background:#f3f3f3; color:#222; text-decoration:none; font-weight:500;">Назад</a>
+                {% endif %}
+                {% for p in range(1, total_pages+1) %}
+                    <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{k}}={{v}}&{% endfor %}page={{p}}" class="pagination-btn" style="padding:0.5em 1.1em; border-radius:6px; {% if p == page %}background:#1ed760; color:#fff;{% else %}background:#f3f3f3; color:#222;{% endif %} text-decoration:none; font-weight:500;">{{ p }}</a>
+                {% endfor %}
+                {% if page < total_pages %}
+                    <a href="?{% for k, v in request.query_params.items() if k != 'page' %}{{k}}={{v}}&{% endfor %}page={{page+1}}" class="pagination-btn" style="padding:0.5em 1.1em; border-radius:6px; background:#f3f3f3; color:#222; text-decoration:none; font-weight:500;">Вперёд</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+    {% include 'footer.html' %}
+    <!-- Модальное окно отклика -->
+    <div id="respond-modal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:1000; align-items:center; justify-content:center;">
+      <div style="background:#fff; border-radius:12px; padding:2.2em 2em; min-width:320px; max-width:95vw; box-shadow:0 4px 32px rgba(0,0,0,0.18); position:relative;">
+        <button onclick="closeRespondModal()" style="position:absolute; right:1em; top:1em; background:none; border:none; font-size:1.5em; cursor:pointer;">&times;</button>
+        <h3 style="margin-bottom:1em;">Отклик на заказ</h3>
+        <form id="respond-form">
+          <textarea id="respond-message" name="message" required minlength="5" maxlength="250" placeholder="Ваше предложение..." style="width:100%; min-height:80px; margin-bottom:1.2em;"></textarea>
+          <input type="number" id="respond-price" name="price" min="1" required placeholder="Ваша цена (₽)" style="width:100%;margin-bottom:1.2em;">
+          <input type="hidden" id="respond-order-id" name="order_id">
+          <button type="submit" class="apply-filters">Откликнуться</button>
+        </form>
+      </div>
+    </div>
+    <script src="assets/js/main.js"></script>
+    <script>
+    function openRespondModal(orderId) {
+      document.getElementById('respond-modal').style.display = 'flex';
+      document.getElementById('respond-order-id').value = orderId;
+      document.getElementById('respond-message').value = '';
+    }
+    function closeRespondModal() {
+      document.getElementById('respond-modal').style.display = 'none';
+    }
+    document.getElementById('respond-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const orderId = document.getElementById('respond-order-id').value;
+      const message = document.getElementById('respond-message').value;
+      const price = parseInt(document.getElementById('respond-price').value, 10);
+      if (!price || price < 1) {
+        alert('Укажите корректную цену!');
+        return;
+      }
+      const resp = await fetch(`/orders/${orderId}/respond`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message, price})
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        closeRespondModal();
+        if (data.chat_id) {
+          window.location.href = `/chat/${data.chat_id}`;
+        } else {
+          alert('Отклик отправлен!');
+          location.reload();
+        }
+      } else {
+        alert('Ошибка при отправке отклика');
+      }
+    }
+    </script>
+</body>
+</html>

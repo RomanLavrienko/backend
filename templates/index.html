@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeenFreelance - Фриланс для школьников</title>
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content">
+        <section class="hero">
+            <h1>Фриланс платформа для школьников и студентов</h1>
+            <p>Начни свою профессиональную карьеру уже сегодня!</p>
+            <a href="register" class="cta-button">Присоединиться</a>
+        </section>
+
+        <section class="categories">
+            <h2>Категории услуг</h2>
+            <div class="category-grid">
+                {% for category in categories %}
+                <div class="category-card" data-category-id="{{ category.id }}">
+                    <h3>{{ category.name }}</h3>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section style="margin:2.5em 0;">
+            <h2 style="text-align:center;font-size:2.1em;font-weight:700;margin-bottom:1.5em;">Популярные заказы</h2>
+            <div style="display:flex;gap:2em;justify-content:center;flex-wrap:wrap;">
+                {% for order in new_orders %}
+                <div class="order-card" style="background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);padding:2em 2em;max-width:320px;min-width:260px;display:flex;flex-direction:column;align-items:center;position:relative;">
+                    <span style="position:absolute;top:1.2em;right:1.2em;background:#1ed760;color:#fff;padding:0.3em 1.1em;border-radius:1em;font-size:1em;font-weight:600;">Новый</span>
+                    <b style="font-size:1.25em;">{{ order.name }}</b>
+                    <div style="color:#888;margin:0.7em 0 1em 0;">{{ order.description }}</div>
+                    <div style="color:#1ed760;font-size:1.2em;font-weight:600;">{{ order.price }} руб.</div>
+                    <div style="color:#888;margin-bottom:1em;">Срок: {{ order.term }} {{ 'день' if order.term == 1 else 'дней' }}</div>
+                    <a href="/orders/{{ order.id }}" class="auth-button" style="margin-top:auto;">Откликнуться</a>
+                </div>
+                {% endfor %}
+                {% for order in urgent_orders %}
+                <div class="order-card" style="background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);padding:2em 2em;max-width:320px;min-width:260px;display:flex;flex-direction:column;align-items:center;position:relative;">
+                    <span style="position:absolute;top:1.2em;right:1.2em;background:#ff5c5c;color:#fff;padding:0.3em 1.1em;border-radius:1em;font-size:1em;font-weight:600;">Срочно</span>
+                    <b style="font-size:1.25em;">{{ order.name }}</b>
+                    <div style="color:#888;margin:0.7em 0 1em 0;">{{ order.description }}</div>
+                    <div style="color:#1ed760;font-size:1.2em;font-weight:600;">{{ order.price }} руб.</div>
+                    <div style="color:#888;margin-bottom:1em;">Срок: {{ order.term }} {{ 'день' if order.term == 1 else 'дней' }}</div>
+                    <a href="/orders/{{ order.id }}" class="auth-button" style="margin-top:auto;">Откликнуться</a>
+                </div>
+                {% endfor %}
+                {% for order in premium_orders %}
+                <div class="order-card" style="background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);padding:2em 2em;max-width:320px;min-width:260px;display:flex;flex-direction:column;align-items:center;position:relative;">
+                    <span style="position:absolute;top:1.2em;right:1.2em;background:#ffb300;color:#fff;padding:0.3em 1.1em;border-radius:1em;font-size:1em;font-weight:600;">Премиум</span>
+                    <b style="font-size:1.25em;">{{ order.name }}</b>
+                    <div style="color:#888;margin:0.7em 0 1em 0;">{{ order.description }}</div>
+                    <div style="color:#1ed760;font-size:1.2em;font-weight:600;">{{ order.price }} руб.</div>
+                    <div style="color:#888;margin-bottom:1em;">Срок: {{ order.term }} {{ 'день' if order.term == 1 else 'дней' }}</div>
+                    <a href="/orders/{{ order.id }}" class="auth-button" style="margin-top:auto;">Откликнуться</a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <script src="assets/js/main.js"></script>
+    <script>
+    document.querySelectorAll('.category-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const catId = this.getAttribute('data-category-id');
+            window.location.href = `/orders?category_id=${catId}`;
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:10.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./data/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+
+  backend:
+    build: .
+    command: >
+      sh -c "sleep 10 && python3 /app/create_support_user.py && uvicorn main:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+      SUPPORT_NICK: ${SUPPORT_NICK}
+      SUPPORT_NAME: ${SUPPORT_NAME}
+      SUPPORT_PASSWORD: ${SUPPORT_PASSWORD}
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  db_data: 

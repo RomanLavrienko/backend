@@ -1,0 +1,158 @@
+<header class="header">
+    <nav class="navbar">
+        <a href="/" class="logo-placeholder"></a>
+        <div class="nav-center">
+            <ul class="nav-links" id="main-nav-links">
+                <li><a href="/orders">Заказы</a></li>
+                <li><a href="/portfolio">Портфолио</a></li>
+                <li><a href="/about">О нас</a></li>
+                <li><a href="/contacts">Контакты</a></li>
+                <li id="chats-link" style="display:none;"><a href="/chats">Чаты</a></li>
+            </ul>
+        </div>
+        <div class="nav-right">
+            <div class="search" style="position:relative;">
+                <input type="text" placeholder="Поиск...">
+                <button type="submit">⌕</button>
+                <div id="search-results" style="display:none;position:absolute;top:110%;left:0;width:320px;max-width:90vw;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);z-index:1000;padding:0.5em 0;"></div>
+            </div>
+            <div class="account-dropdown" id="account-dropdown">
+                <button class="account-button" id="account-btn" style="display:flex;align-items:center;gap:0.7em;">
+                    <div class="account-icon"></div>
+                    <span>Аккаунт</span>
+                    <span id="header-balance" style="display:none;font-weight:600;color:#1ed760;"></span>
+                </button>
+                <div class="dropdown-menu" id="account-menu">
+                    <div id="account-mini-info" style="display:none;">
+                        <div><b id="mini-name"></b> <span id="mini-nickname"></span> <span id="mini-support" style="color:#1ed760;display:none;" title="Служба поддержки">✔</span></div>
+                        <div id="mini-email"></div>
+                        <div>Рейтинг заказчика: <span id="mini-customer-rating"></span></div>
+                        <div>Рейтинг исполнителя: <span id="mini-executor-rating"></span></div>
+                        <button id="profile-link" style="margin-top:8px;">Профиль</button>
+                        <button id="logout-btn" style="margin-top:8px;">Выйти</button>
+                    </div>
+                    <div id="account-guest-links" style="display:none;">
+                        <a href="/login" class="dropdown-item">Вход</a>
+                        <a href="/register" class="dropdown-item">Регистрация</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+<style>
+.account-dropdown { position: relative; }
+.dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid #ddd; border-radius: 8px; min-width: 220px; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 1rem; }
+.account-dropdown:hover .dropdown-menu { display: block; }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    const dropdown = document.getElementById('account-dropdown');
+    const menu = document.getElementById('account-menu');
+    const mini = document.getElementById('account-mini-info');
+    const guest = document.getElementById('account-guest-links');
+    const chatsLink = document.getElementById('chats-link');
+    async function updateAccountMenu() {
+        const res = await fetch('/api/profile/mini');
+        const data = await res.json();
+        if (data.authorized) {
+            mini.style.display = '';
+            guest.style.display = 'none';
+            document.getElementById('mini-name').textContent = data.name;
+            document.getElementById('mini-nickname').textContent = '('+data.nickname+')';
+            document.getElementById('mini-email').textContent = data.email;
+            document.getElementById('mini-customer-rating').textContent = data.customer_rating;
+            document.getElementById('mini-executor-rating').textContent = data.executor_rating;
+            document.getElementById('header-balance').style.display = '';
+            document.getElementById('header-balance').textContent = data.balance + ' ₽';
+            if (data.is_support) {
+                document.getElementById('mini-support').style.display = '';
+            } else {
+                document.getElementById('mini-support').style.display = 'none';
+            }
+        } else {
+            mini.style.display = 'none';
+            guest.style.display = '';
+            document.getElementById('header-balance').style.display = 'none';
+        }
+    }
+    // Показываем/скрываем 'Чаты' при загрузке страницы
+    (async function() {
+        const res = await fetch('/api/profile/mini');
+        const data = await res.json();
+        if (data.authorized) {
+            chatsLink.style.display = '';
+            document.getElementById('header-balance').style.display = '';
+            document.getElementById('header-balance').textContent = data.balance + ' ₽';
+        } else {
+            chatsLink.style.display = 'none';
+            document.getElementById('header-balance').style.display = 'none';
+        }
+    })();
+    dropdown.addEventListener('mouseenter', updateAccountMenu);
+    document.getElementById('profile-link').onclick = function() {
+        window.location.href = '/profile';
+    };
+    document.getElementById('logout-btn').onclick = async function() {
+        await fetch('/api/logout', {method:'POST'});
+        window.location.href = '/login';
+    };
+});
+(function(){
+    const input = document.querySelector('.search input');
+    const btn = document.querySelector('.search button');
+    const results = document.getElementById('search-results');
+    let lastQuery = '';
+    async function doSearch(q) {
+        if (!q) { results.style.display = 'none'; results.innerHTML = ''; return; }
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        let html = '';
+        if (data.orders.length) {
+            html += '<div style="padding:0.3em 1em;font-weight:bold;color:#1ed760;">Заказы</div>';
+            data.orders.forEach(o => {
+                html += `<div class="search-result-item" data-type="${o.type}" data-id="${o.id}" style="padding:0.5em 1em;cursor:pointer;">${o.name}</div>`;
+            });
+        }
+        if (data.users.length) {
+            html += '<div style="padding:0.3em 1em;font-weight:bold;color:#1ed760;">Пользователи</div>';
+            data.users.forEach(u => {
+                html += `<div class="search-result-item" data-type="${u.type}" data-id="${u.nickname}" style="padding:0.5em 1em;cursor:pointer;">${u.name} <span style='color:#888;'>@${u.nickname}</span></div>`;
+            });
+        }
+        if (data.categories.length) {
+            html += '<div style="padding:0.3em 1em;font-weight:bold;color:#1ed760;">Категории</div>';
+            data.categories.forEach(c => {
+                html += `<div class="search-result-item" data-type="${c.type}" data-id="${c.id}" style="padding:0.5em 1em;cursor:pointer;">${c.name}</div>`;
+            });
+        }
+        if (!html) html = '<div style="padding:0.5em 1em;color:#888;">Ничего не найдено</div>';
+        results.innerHTML = html;
+        results.style.display = 'block';
+        // Навешиваем обработчики клика
+        results.querySelectorAll('.search-result-item').forEach(item => {
+            item.onclick = function() {
+                const type = this.dataset.type;
+                if (type === 'order') {
+                    window.location = '/orders/' + this.dataset.id;
+                } else if (type === 'user') {
+                    window.location = '/user/' + this.dataset.id;
+                } else if (type === 'category') {
+                    window.location = '/orders?category_id=' + this.dataset.id;
+                }
+            };
+        });
+    }
+    input.addEventListener('input', function(e){
+        const q = input.value.trim();
+        lastQuery = q;
+        setTimeout(()=>{ if (lastQuery === input.value.trim()) doSearch(q); }, 200);
+    });
+    btn.onclick = function(e){ e.preventDefault(); doSearch(input.value.trim()); };
+    document.addEventListener('click', function(e){
+        if (!results.contains(e.target) && e.target !== input && e.target !== btn) {
+            results.style.display = 'none';
+        }
+    });
+})();
+</script> 

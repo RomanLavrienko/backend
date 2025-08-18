@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заказ | TeenFreelance</title>
+    <link rel="stylesheet" href="/assets/css/reset.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content">
+        <div class="order-container">
+            <div class="order-main">
+                <div class="order-header">
+                    <span class="order-badge new">{{ order.badge }}</span>
+                    <h1>{{ order.title }}</h1>
+                    <div class="order-meta">
+                        <span class="price">{{ order.price }} руб.</span>
+                        <span class="deadline">Срок: {{ order_term }} дн.</span>
+                        <span class="responses">{{ order.responses }} откликов</span>
+                    </div>
+                </div>
+
+                <div class="order-content">
+                    <h3>Описание заказа</h3>
+                    <p>Нужен современный логотип для новой кофейни в скандинавском стиле. Цветовая гамма: пастельные тона. Логотип должен быть простым, запоминающимся и хорошо смотреться как на вывеске, так и на маленьких носителях (например, визитках).</p>
+                    <p>Предпочтительные цвета: мягкие оттенки голубого, бежевого и серого. Должен присутствовать элемент, связанный с кофе (зерно, чашка и т.д.), но в минималистичном исполнении.</p>
+                </div>
+
+                <div class="order-actions">
+                    <button class="respond-button" onclick="openRespondModal({{ order.id }})">Откликнуться на заказ</button>
+                    {% if is_favorite %}
+                    <button class="save-button" id="favorite-btn" onclick="toggleFavorite({{ order.id }}, true)">Убрать из избранного</button>
+                    {% else %}
+                    <button class="save-button" id="favorite-btn" onclick="toggleFavorite({{ order.id }}, false)">Сохранить в избранное</button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="order-sidebar">
+                <div class="client-card">
+                    <div class="client-header">
+                        <div class="client-avatar">
+                            {% if customer.photo %}
+                                <img src="/assets/images/{{ customer.photo }}" alt="Фото профиля" style="width:60px;height:60px;border-radius:50%;object-fit:cover;">
+                            {% endif %}
+                        </div>
+                        <div class="client-info">
+                            <h3>{{ customer.name }}</h3>
+                            <span class="verified">{% if customer.verified %}✓ Верифицирован{% else %}Не верифицирован{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="client-stats">
+                        <div class="stat">
+                            <span class="stat-value">{{ customer.rating }}</span>
+                            <span class="stat-label">Рейтинг</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">{{ customer.orders_count }}</span>
+                            <span class="stat-label">Заказов</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">{{ customer.success_rate }}%</span>
+                            <span class="stat-label">Завершено</span>
+                        </div>
+                    </div>
+                    <div class="client-description">
+                        {% if customer.description %}
+                        <p>{{ customer.description }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="client-actions">
+                        <button class="message-button" onclick="startChat({{ customer.id }})">Написать сообщение</button>
+                        <button class="other-orders" onclick="window.location.href='/user/{{ customer.nickname }}'">Другие заказы</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <!-- Модальное окно отклика -->
+    <div id="respond-modal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:1000; align-items:center; justify-content:center;">
+      <div style="background:#fff; border-radius:12px; padding:2.2em 2em; min-width:320px; max-width:95vw; box-shadow:0 4px 32px rgba(0,0,0,0.18); position:relative;">
+        <button onclick="closeRespondModal()" style="position:absolute; right:1em; top:1em; background:none; border:none; font-size:1.5em; cursor:pointer;">&times;</button>
+        <h3 style="margin-bottom:1em;">Отклик на заказ</h3>
+        <form id="respond-form">
+          <textarea id="respond-message" name="message" required minlength="5" maxlength="250" placeholder="Ваше предложение..." style="width:100%; min-height:80px; margin-bottom:1.2em;"></textarea>
+          <input type="number" id="respond-price" name="price" min="1" required placeholder="Ваша цена (₽)" style="width:100%;margin-bottom:1.2em;">
+          <input type="hidden" id="respond-order-id" name="order_id">
+          <button type="submit" class="apply-filters">Откликнуться</button>
+        </form>
+      </div>
+    </div>
+    <script>
+// Функция для начала чата
+async function startChat(userId) {
+    try {
+        const resp = await fetch(`/chat/start/${userId}`, {
+            method: 'POST',
+            credentials: 'same-origin'
+        });
+
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.chat_id) {
+                window.location.href = `/chat/${data.chat_id}`;
+            } else {
+                alert('Ошибка при создании чата: ID чата не получен');
+            }
+        } else {
+            const error = await resp.json();
+            alert(`Ошибка: ${error.error || 'Неизвестная ошибка'}`);
+        }
+    } catch (e) {
+        console.error('Ошибка при создании чата:', e);
+        alert('Произошла ошибка при создании чата');
+    }
+}
+
+// Функции для работы с модальным окном отклика
+function openRespondModal(orderId) {
+    document.getElementById('respond-modal').style.display = 'flex';
+    document.getElementById('respond-order-id').value = orderId;
+    document.getElementById('respond-message').value = '';
+    document.getElementById('respond-price').value = '';
+}
+
+function closeRespondModal() {
+    document.getElementById('respond-modal').style.display = 'none';
+}
+
+// Функция для добавления/удаления из избранного
+async function toggleFavorite(orderId, isFav) {
+    const btn = document.getElementById('favorite-btn');
+    btn.disabled = true;
+
+    try {
+        const url = isFav ? `/orders/${orderId}/unfavorite` : `/orders/${orderId}/favorite`;
+        const resp = await fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin'
+        });
+
+        if (resp.ok) {
+            location.reload();
+        } else {
+            const error = await resp.json();
+            alert(`Ошибка: ${error.error || 'Неизвестная ошибка'}`);
+            btn.disabled = false;
+        }
+    } catch (e) {
+        console.error('Ошибка при изменении избранного:', e);
+        alert('Произошла ошибка при изменении избранного');
+        btn.disabled = false;
+    }
+}
+
+// Обработчик отправки формы отклика
+document.getElementById('respond-form').onsubmit = async function(e) {
+    e.preventDefault();
+
+    const orderId = document.getElementById('respond-order-id').value;
+    const message = document.getElementById('respond-message').value;
+    const price = document.getElementById('respond-price').value;
+
+    if (!message || !price) {
+        alert('Заполните все поля!');
+        return;
+    }
+
+    try {
+        const resp = await fetch(`/orders/${orderId}/respond`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message, price})
+        });
+
+        if (resp.ok) {
+            const data = await resp.json();
+            closeRespondModal();
+
+            if (data.chat_id) {
+                window.location.href = `/chat/${data.chat_id}`;
+            } else {
+                alert('Отклик успешно отправлен!');
+                location.reload();
+            }
+        } else {
+            const error = await resp.json();
+            alert(`Ошибка: ${error.error || 'Неизвестная ошибка при отправке отклика'}`);
+        }
+    } catch (e) {
+        console.error('Ошибка при отправке отклика:', e);
+        alert('Произошла ошибка при отправке отклика');
+    }
+}
+</script>

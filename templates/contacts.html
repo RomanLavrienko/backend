@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контакты | TeenFreelance</title>
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content">
+        <section class="contacts-section">
+            <h1>Свяжитесь с нами</h1>
+            <div class="contacts-container">
+                <div class="contacts-info">
+                    <div class="contact-item">
+                        <h3>Адрес</h3>
+                        <p>{{ contacts.address }}</p>
+                    </div>
+                    <div class="contact-item">
+                        <h3>Телефон</h3>
+                        <p>{{ contacts.phone }}</p>
+                    </div>
+                    <div class="contact-item">
+                        <h3>Email</h3>
+                        <p>{{ contacts.email }}</p>
+                    </div>
+                    <div class="contact-item">
+                        <h3>Режим работы</h3>
+                        <p>Пн-Пт: 9:00 - 18:00</p>
+                    </div>
+                </div>
+                <div class="contacts-form">
+                    <h3>Форма обратной связи</h3>
+                    <form action="/contacts/send" method="post">
+                        <div class="form-group">
+                            <input type="text" name="name" placeholder="Ваше имя" required maxlength="100">
+                        </div>
+                        <div class="form-group">
+                            <input type="email" name="email" placeholder="Ваш email" required maxlength="100">
+                        </div>
+                        <div class="form-group">
+                            <textarea name="message" placeholder="Ваше сообщение" required maxlength="1000"></textarea>
+                        </div>
+                        <button type="submit" class="submit-button">Отправить</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section class="map-section">
+            <div class="map-placeholder">
+                {% if not is_admin %}
+                <form method="get" action="/contacts" style="margin-bottom:1em;">
+                    <input type="email" name="email" placeholder="Ваш email для поиска обращений" value="{{ user_email }}" style="padding:0.5em;max-width:220px;">
+                    <button type="submit" class="submit-button" style="margin-left:0.5em;">Показать мои обращения</button>
+                </form>
+                {% endif %}
+                {% if show_requests and contact_requests %}
+                <div style="background:#f3f3f3; border-radius:10px; padding:2em; min-height:320px;">
+                    <h3 style="margin-bottom:1em;">Ваши обращения</h3>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr style="background:#eee;"><th>Сообщение</th><th>Статус</th><th>Дата</th></tr>
+                        {% for req in contact_requests %}
+                        <tr>
+                            <td>{{ req.message }}</td>
+                            <td>{% if req.status == 'answered' %}Ответ дан{% else %}Ожидает ответа{% endif %}</td>
+                            <td>{{ req.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                {% endif %}
+                {% if is_admin and contact_requests %}
+                <div style="background:#f3f3f3; border-radius:10px; padding:2em; min-height:320px; margin-top:2em;">
+                    <h3 style="margin-bottom:1em;">Все обращения пользователей (админ)</h3>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr style="background:#eee;"><th>Имя</th><th>Email</th><th>Сообщение</th><th>Статус</th><th>Дата</th></tr>
+                        {% for req in contact_requests %}
+                        <tr>
+                            <td>{{ req.name }}</td>
+                            <td>{{ req.email }}</td>
+                            <td>{{ req.message }}</td>
+                            <td>{% if req.status == 'answered' %}Ответ дан{% else %}Ожидает ответа{% endif %}</td>
+                            <td>{{ req.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

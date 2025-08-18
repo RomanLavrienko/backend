@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактировать профиль | TeenFreelance</title>
+    <link rel="stylesheet" href="/assets/css/reset.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header.html' %}
+    <main class="main-content auth-container">
+        <div class="auth-card" style="max-width:500px;">
+            <h1>Редактировать профиль</h1>
+            <form method="post" enctype="multipart/form-data" action="/profile/edit">
+                <div class="form-group">
+                    <label for="name">Имя:</label>
+                    <input type="text" id="name" name="name" value="{{ user.name }}" required minlength="2" maxlength="15">
+                </div>
+                <div class="form-group">
+                    <label for="description">Описание:</label>
+                    <textarea id="description" name="description" rows="4" maxlength="500">{{ user.description }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="photo">Фото профиля:</label>
+                    <input type="file" id="photo" name="photo" accept="image/*">
+                    {% if user.photo %}
+                        <div style="margin-top:1em;"><img src="/assets/images/{{ user.photo }}" alt="Фото профиля" style="max-width:120px; border-radius:50%;object-fit:cover;"></div>
+                    {% endif %}
+                </div>
+                <div style="margin-top:2em; text-align:right;">
+                    <button type="submit" class="apply-filters" style="padding:0.8em 2.2em;">Сохранить</button>
+                    <a href="/profile" class="auth-button" style="background:#eee;color:#222;">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </main>
+    {% include 'footer.html' %}
+    <script src="/assets/js/main.js"></script>
+</body>
+</html> 

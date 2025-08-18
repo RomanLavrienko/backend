@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Портфолио | TeenFreelance</title>
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content">
+        <section class="portfolio-header">
+            <h1>Портфолио исполнителей</h1>
+            <div class="portfolio-filters">
+                <select>
+                    <option>Все категории</option>
+                    <option>Дизайн</option>
+                    <option>Программирование</option>
+                    <option>Копирайтинг</option>
+                </select>
+                <select>
+                    <option>Сортировка по рейтингу</option>
+                    <option>По дате регистрации</option>
+                    <option>По количеству работ</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="portfolio-grid">
+            <div style="margin:2em 0;">
+            {% if users and users|length > 0 %}
+                <div style="display:flex;flex-wrap:wrap;gap:2.5em;justify-content:center;">
+                {% for user in users %}
+                    <div style="background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);padding:2em 2em;max-width:320px;min-width:260px;display:flex;flex-direction:column;align-items:center;">
+                        <div style="width:80px;height:80px;border-radius:50%;background:#e0e0e0;overflow:hidden;margin-bottom:1em;">
+                            {% if user.photo %}
+                                <img src="/assets/images/{{ user.photo }}" alt="Фото профиля" style="width:80px;height:80px;object-fit:cover;border-radius:50%;">
+                            {% endif %}
+                        </div>
+                        <a href="/user/{{ user.nickname }}" style="font-size:1.3em;font-weight:700;text-decoration:none;color:#222;margin-bottom:0.3em;">{{ user.name }}</a>
+                        <div style="color:#1ed760;font-weight:500;margin-bottom:0.7em;">@{{ user.nickname }}</div>
+                        <div style="color:#888;font-size:1.05em;margin-bottom:0.7em;">Рейтинг исполнителя: <b>{{ user.executor_rating }}</b></div>
+                        <div style="font-size:1.05em;line-height:1.5;margin-bottom:1em;min-height:40px;">{{ user.description or 'Нет описания.' }}</div>
+                        <a href="/user/{{ user.nickname }}" class="auth-button" style="margin-top:auto;">Смотреть профиль</a>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <div style="color:#888;text-align:center;">Нет подходящих исполнителей.</div>
+            {% endif %}
+            </div>
+        </section>
+        <div class="portfolio-footer">
+            <p>Не нашли подходящего исполнителя? <a href="contacts.html">Свяжитесь с нами</a>, мы поможем!</p>
+        </div>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

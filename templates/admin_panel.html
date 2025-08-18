@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель</title>
+    <link rel="stylesheet" href="/assets/css/reset.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+    <main class="main-content">
+        <div class="auth-card" style="max-width:1200px;">
+            <h1>Админ-панель</h1>
+            <h2>Пользователи</h2>
+            <table border="1" cellpadding="6" style="width:100%;margin-bottom:2em;">
+                <tr><th>ID</th><th>Имя</th><th>Ник</th><th>Email</th><th>Баланс</th><th>Рейтинг</th><th>Действия</th></tr>
+                {% for user in users %}
+                <tr>
+                    <form method="post" action="/admin/user/{{ user.id }}/edit">
+                        <td>{{ user.id }}</td>
+                        <td><input type="text" name="name" value="{{ user.name }}" style="width:100px;"></td>
+                        <td><input type="text" name="nickname" value="{{ user.nickname }}" style="width:100px;"></td>
+                        <td><input type="text" name="email" value="{{ user.email }}" style="width:140px;"></td>
+                        <td><input type="number" name="balance" value="{{ user.balance }}" step="0.01" style="width:80px;"></td>
+                        <td><input type="number" name="customer_rating" value="{{ user.customer_rating }}" step="0.01" style="width:60px;"></td>
+                        <td>
+                            <button type="submit">Сохранить</button>
+                    </form>
+                    <form method="post" action="/admin/user/{{ user.id }}/delete" style="display:inline;">
+                        <button type="submit" onclick="return confirm('Удалить пользователя?')">Удалить</button>
+                    </form>
+                        </td>
+                    <td>
+                        <b>Заказы заказчика:</b>
+                        {% for order in orders if order.customer_id == user.id %} #{{ order.id }} {% endfor %}<br>
+                        <b>Заказы исполнителя:</b>
+                        {% for order in orders if order.executor_id == user.id %}
+                            <form method="post" action="/admin/order/{{ order.id }}/change_executor" style="display:inline;">
+                                #{{ order.id }} <input type="number" name="executor_id" value="{{ order.executor_id }}" style="width:40px;">
+                                <button type="submit">Изм.</button>
+                            </form>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <h2>Заказы</h2>
+            <table border="1" cellpadding="6" style="width:100%;">
+                <tr><th>ID</th><th>Название</th><th>Описание</th><th>Цена</th><th>Статус</th><th>Действия</th></tr>
+                {% for order in orders %}
+                <tr>
+                    <form method="post" action="/admin/order/{{ order.id }}/edit">
+                        <td>{{ order.id }}</td>
+                        <td><input type="text" name="title" value="{{ order.name }}" style="width:120px;"></td>
+                        <td><input type="text" name="description" value="{{ order.description }}" style="width:220px;"></td>
+                        <td><input type="number" name="price" value="{{ order.price }}" style="width:80px;"></td>
+                        <td><input type="text" name="status" value="{{ order.status }}" style="width:80px;"></td>
+                        <td>
+                            <button type="submit">Сохранить</button>
+                    </form>
+                    <form method="post" action="/admin/order/{{ order.id }}/delete" style="display:inline;">
+                        <button type="submit" onclick="return confirm('Удалить заказ?')">Удалить</button>
+                    </form>
+                        </td>
+                    <td>
+                        <b>Исполнитель:</b> {{ order.executor_id if order.executor_id else '—' }}
+                        {% if order.executor_id %}
+                        <form method="post" action="/admin/order/{{ order.id }}/remove_executor" style="display:inline;">
+                            <button type="submit" onclick="return confirm('Убрать исполнителя?')">Убрать</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <h2>Офферы</h2>
+            <table border="1" cellpadding="6" style="width:100%;margin-bottom:2em;">
+                <tr><th>ID</th><th>Текст</th><th>Order ID</th><th>Chat ID</th><th>Sender ID</th><th>Дата</th><th>Действия</th></tr>
+                {% for offer in offers %}
+                <tr>
+                    <form method="post" action="/admin/offer/{{ offer.id }}/edit">
+                        <td>{{ offer.id }}</td>
+                        <td><input type="text" name="text" value="{{ offer.text|e }}" style="width:220px;"></td>
+                        <td><input type="number" name="order_id" value="{{ offer.order_id }}" style="width:70px;"></td>
+                        <td>{{ offer.chat_id }}</td>
+                        <td>{{ offer.sender_id }}</td>
+                        <td>{{ offer.created_at }}</td>
+                        <td>
+                            <button type="submit">Сохранить</button>
+                    </form>
+                    <form method="post" action="/admin/offer/{{ offer.id }}/delete" style="display:inline;">
+                        <button type="submit" onclick="return confirm('Удалить оффер?')">Удалить</button>
+                    </form>
+                        </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <li><a href="/admin/commission">Настройки комиссий</a></li>
+        </div>
+    </main>
+</body>
+</html> 

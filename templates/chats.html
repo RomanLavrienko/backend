@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чаты | TeenFreelance</title>
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .chat-layout { display: flex; height: 92vh; background: #fafbfc; border-radius: 0; overflow: hidden; box-shadow: none; margin: 0; width: 100vw; max-width: none; }
+        .chat-sidebar { width: 500px; background: #fff; border-right: 1px solid #eee; display: flex; flex-direction: column; min-width: 350px; max-width: 700px; }
+        .chat-search { padding: 1.5rem; border-bottom: 1px solid #eee; }
+        .chat-search input { width: 100%; padding: 1rem; border-radius: 10px; border: 1px solid #ddd; font-size: 1.15em; }
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { display: flex; align-items: center; gap: 1.2rem; padding: 1.2rem 1.5rem; cursor: pointer; border-bottom: 1px solid #f3f3f3; transition: background 0.15s; border-left: 4px solid transparent; }
+        .chat-item:hover { background: #f6f6f6; border-left: 4px solid #1ed760; }
+        .chat-avatar { width: 56px; height: 56px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; }
+        .chat-main { flex: 1; display: flex; align-items: center; justify-content: center; background: #f9f9fb; min-width: 0; }
+        .chat-empty { text-align: center; color: #888; }
+        .chat-empty svg { width: 64px; height: 64px; margin-bottom: 1.5rem; }
+        body, html { margin: 0; padding: 0; }
+        main.main-content { margin: 0; padding: 0; max-width: none; }
+    </style>
+</head>
+<body>
+    {% include 'header.html' %}
+    <main class="main-content">
+        <div class="chat-layout">
+            <aside class="chat-sidebar">
+                <div class="chat-search">
+                    <input type="text" placeholder="Поиск">
+                </div>
+                <div class="chat-list">
+                    {% for chat in chats %}
+                    <div class="chat-item" onclick="window.location.href='/chat/{{ chat.id }}'">
+                        <div class="chat-avatar">{{ chat.name[0]|upper }}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:bold;">{{ chat.name }}</div>
+                            <div style="font-size:1em; color:#888;">{{ chat.last_message }}</div>
+                        </div>
+                        <div style="font-size:0.95em; color:#aaa;">{{ chat.date }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </aside>
+            <section class="chat-main">
+                <div class="chat-empty">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
+                    <div>Выберите собеседника</div>
+                </div>
+            </section>
+        </div>
+    </main>
+    {% include 'footer.html' %}
+    <script src="assets/js/main.js"></script>
+</body>
+</html> 

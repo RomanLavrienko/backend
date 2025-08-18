@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактировать заказ</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+    <main class="main-content">
+        <div class="orders-list-container" style="max-width:600px; margin:2rem auto;">
+            <h2 style="margin-bottom:1.5rem;">Редактировать заказ</h2>
+            <form method="post">
+                <div style="margin-bottom:1.2em;">
+                    <label for="title">Название заказа</label><br>
+                    <input type="text" id="title" name="title" value="{{ order.name }}" required minlength="1" maxlength="30" style="width:100%; padding:0.5em;">
+                </div>
+                <div style="margin-bottom:1.2em;">
+                    <label for="description">Описание</label><br>
+                    <textarea id="description" name="description" required minlength="1" maxlength="250" style="width:100%; min-height:90px; padding:0.5em;">{{ order.description }}</textarea>
+                </div>
+                <button type="submit" class="apply-filters">Сохранить</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html> 

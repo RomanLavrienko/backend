@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>О нас | TeenFreelance</title>
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content">
+        <section class="about-section">
+            <h1>О нашей платформе</h1>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>{{ about_text1 }}</p>
+                    <p>{{ about_text2 }}</p>
+                    <h2>Наши преимущества</h2>
+                    <ul class="advantages">
+                        {% for adv in advantages %}
+                        <li>{{ adv }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="about-image"></div>
+            </div>
+        </section>
+
+        <section class="team-section">
+            <h2>Наша команда</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="member-avatar"></div>
+                    <h3>{{ member.name }}</h3>
+                    <p>{{ member.description }}</p>
+                </div>
+                <!-- Другие участники команды -->
+            </div>
+        </section>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

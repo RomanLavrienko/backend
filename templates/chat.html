@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чаты | TeenFreelance</title>
+    <link rel="stylesheet" href="/assets/css/reset.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .chat-layout { display: flex; height: 92vh; background: #fafbfc; border-radius: 0; overflow: hidden; box-shadow: none; margin: 0; width: 100%; max-width: 100vw; }
+        body, html { margin: 0; padding: 0; overflow-x: hidden; }
+        main.main-content { margin: 0; padding: 0; max-width: none; }
+        .chat-sidebar { width: 400px; background: #fff; border-right: 1px solid #eee; display: flex; flex-direction: column; min-width: 280px; max-width: 500px; }
+        .chat-search { padding: 1.5rem; border-bottom: 1px solid #eee; }
+        .chat-search input { width: 100%; padding: 1rem; border-radius: 10px; border: 1px solid #ddd; font-size: 1.15em; }
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { display: flex; align-items: center; gap: 1.2rem; padding: 1.2rem 1.5rem; cursor: pointer; border-bottom: 1px solid #f3f3f3; transition: background 0.15s; border-left: 4px solid transparent; }
+        .chat-item:hover, .chat-item.active { background: #f6f6f6; border-left: 4px solid #1ed760; }
+        .chat-avatar { width: 48px; height: 48px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.3rem; }
+        .chat-main { flex: 1; display: flex; flex-direction: column; background: #f9f9fb; min-width: 0; }
+        .chat-header { padding: 1.5rem; border-bottom: 1px solid #eee; background: #fff; font-weight: bold; font-size: 1.2em; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 2rem; display: flex; flex-direction: column; gap: 1.2rem; }
+        .chat-message { background: #fff; border-radius: 10px; padding: 1rem 1.2rem; max-width: 60%; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .chat-message.me { background: #eafff0; align-self: flex-end; }
+        .chat-input-bar { padding: 1.5rem; border-top: 1px solid #eee; background: #fff; display: flex; gap: 1rem; }
+        .chat-input-bar textarea { flex: 1; border-radius: 8px; border: 1px solid #ddd; padding: 0.8em; font-size: 1.1em; resize: none; }
+        .chat-input-bar button { background: #1ed760; color: #fff; border: none; border-radius: 8px; padding: 0.8em 2em; font-weight: bold; font-size: 1.1em; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <audio id="offer-sound" src="/assets/sound/notify.mp3" preload="auto"></audio>
+    {% include 'header.html' %}
+    <main class="main-content">
+        <div class="chat-layout">
+            <aside class="chat-sidebar">
+                <div class="chat-search">
+                    <input type="text" placeholder="Поиск">
+                </div>
+                <div class="chat-list">
+                    {% for chat in chats %}
+                    <div class="chat-item{% if chat.id == chat_id %} active{% endif %}" onclick="window.location.href='/chat/{{ chat.id }}'">
+                        <div class="chat-avatar">{{ chat.name[0]|upper }}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:bold;">{{ chat.name }}</div>
+                            <div style="font-size:1em; color:#888;">{{ chat.last_message }}</div>
+                        </div>
+                        <div style="font-size:0.95em; color:#aaa;">{{ chat.date }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </aside>
+            <section class="chat-main">
+                <div class="chat-header" style="display:flex;align-items:center;gap:1.2em;">
+                    {% if user.id == chat.customer_id %}
+                        {% set chat_user = executor %}
+                    {% else %}
+                        {% set chat_user = customer %}
+                    {% endif %}
+                    {% if chat_user and chat_user.photo %}
+                        <img src="/assets/images/{{ chat_user.photo }}" alt="Фото профиля" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+                    {% endif %}
+                    <span>Чат с <a href="/user/{{ chat_user.nickname }}" style="text-decoration:underline;">{{ chat_user.name }}{% if chat_user.is_support %} <span title="Служба поддержки" style="color:#1ed760;">✔</span>{% endif %}</a></span>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div id="offer-block"></div>
+                    {% for msg in messages %}
+                        {% if msg.type != 'offer' %}
+                            <div class="chat-message{% if msg.sender_id == user.id %} me{% endif %}" data-id="{{ msg.id }}">{{ msg.text }}</div>
+                        {% endif %}
+                    {% endfor %}
+                    {% if last_offer %}
+                        <div class="chat-message-offer" style="background:#fffbe6; border:1.5px solid #ffe066; border-radius:10px; padding:1.2em 1.5em; margin:1.2em 0;">
+                            <b>{{ executor.name if last_offer.sender_id == executor.id else customer.name }} откликнулся на заказ!</b><br>
+                            <div style="margin:0.7em 0 0.5em 0;">{{ last_offer.text }}</div>
+                            <div style="margin:0.5em 0 0.5em 0;"><b>Цена предложения:</b> {{ last_offer.offer_price }} ₽</div>
+                            {% if user.id == chat.customer_id and order and order.status == 'OPEN' %}
+                            <form id="accept-order-form" style="margin-top:0.7em;">
+                                <button type="submit" class="apply-filters">Принять заказ</button>
+                            </form>
+                            <script>
+                            document.getElementById('accept-order-form').onsubmit = async function(e) {
+                                e.preventDefault();
+                                const resp = await fetch(`/orders/{{ order.id }}/accept`, {method: 'POST', credentials: 'same-origin'});
+                                if (resp.ok) {
+                                    alert('Заказ принят!');
+                                    location.reload();
+                                } else {
+                                    let msg = 'Ошибка при принятии заказа';
+                                    try {
+                                        const data = await resp.json();
+                                        if (data && data.error) msg = data.error;
+                                    } catch {}
+                                    alert(msg);
+                                }
+                            }
+                            </script>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+                {% if order and order.status == 'REVIEW' %}
+                <div class="chat-active-order" style="background:#fffbe6; border:1.5px solid #ffe066; border-radius:10px; padding:1.2em 1.5em; margin:1.2em 0;">
+                    <b>Заказ сдан на проверку!</b><br>
+                    <span>Название: {{ order.name }}</span><br>
+                    <span>Бюджет: {{ order.price }} ₽</span><br>
+                    <span>Статус: {{ order.status }}</span><br>
+                    {% if user.id == chat.executor_id %}
+                        <div style="color:#c00; margin-top:0.7em;">Заказ сдан на проверку, ждите решения заказчика.</div>
+                    {% elif user.id == chat.customer_id %}
+                        <form id="confirm-order-form" style="margin-top:1em;display:inline-block;">
+                            <label>Оценка исполнителя:
+                                <select name="rate" id="review-rate">
+                                    <option value="5">5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                    <option value="1">1</option>
+                                </select>
+                            </label><br>
+                            <label>Отзыв:<br>
+                                <textarea name="text" id="review-text" required minlength="5" maxlength="150" style="width:100%;min-height:60px;"></textarea>
+                            </label><br>
+                            <button type="submit" class="apply-filters" style="margin-top:0.7em;">Принять заказ и оставить отзыв</button>
+                        </form>
+                        <button id="return-to-work-btn" class="apply-filters" style="margin-top:0.7em; background:#ffb3b3;display:inline-block;">Отправить на доработку</button>
+                        <script>
+                        document.getElementById('confirm-order-form').onsubmit = async function(e) {
+                            e.preventDefault();
+                            const rate = document.getElementById('review-rate').value;
+                            const text = document.getElementById('review-text').value;
+                            const resp = await fetch('/orders/{{ order.id }}/confirm', {
+                                method:'POST',
+                                headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                                body: new URLSearchParams({rate, text}),
+                                credentials:'same-origin'
+                            });
+                            if (resp.ok) { alert('Заказ подтверждён и отзыв отправлен!'); location.reload(); }
+                            else alert('Ошибка!');
+                        }
+                        document.getElementById('return-to-work-btn').onclick = async function() {
+                            if (!confirm('Отправить заказ на доработку?')) return;
+                            const resp = await fetch('/orders/{{ order.id }}/return_to_work', {method:'POST', credentials:'same-origin'});
+                            if (resp.ok) location.reload(); else alert('Ошибка!');
+                        }
+                        </script>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if order and order.status == 'WORK' %}
+                <div class="chat-active-order" style="background:#eafff0; border:1.5px solid #1ed760; border-radius:10px; padding:1.2em 1.5em; margin:1.2em 0;">
+                    <b>Активный заказ:</b> {{ order.name }}<br>
+                    <span>Бюджет: {{ order.price }} ₽</span><br>
+                    <span>Статус: {{ order.status }}</span><br>
+                    {% if user.id == chat.executor_id %}
+                        <button id="submit-review-btn" class="apply-filters" style="margin-top:0.7em;">Сдать на проверку</button>
+                        <script>
+                        document.getElementById('submit-review-btn').onclick = async function() {
+                            if (!confirm('Сдать заказ на проверку?')) return;
+                            const resp = await fetch('/orders/{{ order.id }}/submit_for_review', {
+                                method:'POST',
+                                credentials:'same-origin'
+                            });
+                            if (resp.ok) location.reload(); else alert('Ошибка!');
+                        }
+                        </script>
+                    {% endif %}
+                    {% if user.id == chat.customer_id %}
+                        <button id="cancel-order-btn" class="apply-filters" style="margin-top:0.7em; background:#ffb3b3;">Досрочно отменить заказ</button>
+                        <script>
+                        document.getElementById('cancel-order-btn').onclick = async function() {
+                            if (!confirm('Досрочно отменить заказ?')) return;
+                            const resp = await fetch('/orders/{{ order.id }}/cancel', {method:'POST', credentials:'same-origin'});
+                            if (resp.ok) location.reload(); else alert('Ошибка!');
+                        }
+                        </script>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if order and order.status == 'CLOSE' and user.id == chat.executor_id %}
+                {% set already_reviewed = reviews | selectattr('order_id', 'equalto', order.id) | selectattr('type', 'equalto', 'customer') | selectattr('sender_id', 'equalto', user.id) | list | length > 0 %}
+                {% if not already_reviewed %}
+                <div class="chat-active-order" style="background:#eafff0; border:1.5px solid #1ed760; border-radius:10px; padding:1.2em 1.5em; margin:1.2em 0;">
+                    <b>Оставьте отзыв о заказчике</b><br>
+                    <form id="executor-review-form" style="margin-top:1em;">
+                        <label>Оценка заказчика:
+                            <select name="rate" id="executor-review-rate">
+                                <option value="5">5</option>
+                                <option value="4">4</option>
+                                <option value="3">3</option>
+                                <option value="2">2</option>
+                                <option value="1">1</option>
+                            </select>
+                        </label><br>
+                        <label>Отзыв:<br>
+                            <textarea name="text" id="executor-review-text" required minlength="5" maxlength="150" style="width:100%;min-height:60px;"></textarea>
+                        </label><br>
+                        <button type="submit" class="apply-filters" style="margin-top:0.7em;">Оставить отзыв</button>
+                    </form>
+                    <script>
+                    document.getElementById('executor-review-form').onsubmit = async function(e) {
+                        e.preventDefault();
+                        const rate = document.getElementById('executor-review-rate').value;
+                        const text = document.getElementById('executor-review-text').value;
+                        const resp = await fetch('/orders/{{ order.id }}/executor_review', {
+                            method:'POST',
+                            headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                            body: new URLSearchParams({rate, text}),
+                            credentials:'same-origin'
+                        });
+                        if (resp.ok) { location.reload(); }
+                        else alert('Ошибка!');
+                    }
+                    </script>
+                </div>
+                {% endif %}
+                {% endif %}
+                <form class="chat-input-bar" id="chat-send-form">
+                    <textarea id="chat-input" placeholder="Напишите сообщение..."></textarea>
+                    <button type="submit">Отправить</button>
+                </form>
+                {% if user.id == chat.customer_id and order and order.status == 'OPEN' %}
+                <form id="accept-order-form" style="margin:1.5em 0;">
+                    <button type="submit" class="apply-filters">Принять заказ</button>
+                </form>
+                <script>
+                document.getElementById('accept-order-form').onsubmit = async function(e) {
+                    e.preventDefault();
+                    const resp = await fetch(`/orders/{{ order.id }}/accept`, {method: 'POST', credentials: 'same-origin'});
+                    if (resp.ok) {
+                        alert('Заказ принят!');
+                        location.reload();
+                    } else {
+                        let msg = 'Ошибка при принятии заказа';
+                        try {
+                            const data = await resp.json();
+                            if (data && data.error) msg = data.error;
+                        } catch {}
+                        alert(msg);
+                    }
+                }
+                </script>
+                {% endif %}
+                <script>
+                document.getElementById('chat-send-form').onsubmit = async function(e) {
+                    e.preventDefault();
+                    const text = document.getElementById('chat-input').value.trim();
+                    if (!text) return;
+                    const resp = await fetch(window.location.pathname + '/send', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({text})
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = 'chat-message me';
+                        msgDiv.textContent = data.message.text;
+                        msgDiv.dataset.id = data.message.id;
+                        document.getElementById('chat-messages').appendChild(msgDiv);
+                        document.getElementById('chat-input').value = '';
+                        document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+                        lastMessageId = data.message.id;
+                    } else {
+                        alert('Ошибка при отправке сообщения');
+                    }
+                }
+                let lastMessageId = 0;
+                const chatId = window.location.pathname.split('/').filter(Boolean).pop();
+                const messagesDiv = document.getElementById('chat-messages');
+                // Найти последний id сообщения при загрузке
+                Array.from(messagesDiv.children).forEach(msg => {
+                    if (msg.dataset && msg.dataset.id) {
+                        lastMessageId = Math.max(lastMessageId, +msg.dataset.id);
+                    }
+                });
+                setInterval(async () => {
+                    const resp = await fetch(`/chat/${chatId}/messages?after_id=${lastMessageId}`);
+                    if (resp.ok) {
+                        const newMessages = await resp.json();
+                        newMessages.forEach(msg => {
+                            const msgDiv = document.createElement('div');
+                            msgDiv.className = 'chat-message' + (msg.sender_id == window.currentUserId ? ' me' : '');
+                            msgDiv.textContent = msg.text;
+                            msgDiv.dataset.id = msg.id;
+                            messagesDiv.appendChild(msgDiv);
+                            lastMessageId = Math.max(lastMessageId, msg.id);
+                            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                        });
+                    }
+                }, 2000);
+                const chatInput = document.getElementById('chat-input');
+                chatInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        document.getElementById('chat-send-form').dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}));
+                    }
+                    // Shift+Enter — стандартный перенос строки, ничего не делаем
+                });
+                // Автофокус на поле ввода при загрузке страницы
+                window.addEventListener('DOMContentLoaded', function() {
+                    const chatInput = document.getElementById('chat-input');
+                    if (chatInput) chatInput.focus();
+                    // Автоскролл вниз
+                    const messagesDiv = document.getElementById('chat-messages');
+                    if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                });
+                // Автоскролл вниз при новых сообщениях
+                const observer = new MutationObserver(function() {
+                    const messagesDiv = document.getElementById('chat-messages');
+                    if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                });
+                observer.observe(document.getElementById('chat-messages'), { childList: true, subtree: true });
+                </script>
+            </section>
+        </div>
+    </main>
+    {% include 'footer.html' %}
+</body>
+</html>

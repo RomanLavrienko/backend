@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Избранные заказы | TeenFreelance</title>
+    <link rel="stylesheet" href="/assets/css/reset.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header.html' %}
+    <main class="main-content">
+        <div class="orders-list-container">
+            <h2 style="font-size:2rem;font-weight:700;margin-bottom:1.5em;">Избранные заказы</h2>
+            <div class="orders-grid">
+                {% if orders and orders|length > 0 %}
+                    {% for order in orders %}
+                    <div class="order-card-new" onclick="window.location.href='/orders/{{ order.id }}'">
+                        <div class="order-icon">★</div>
+                        <div class="order-content-new" style="position:relative;">
+                            <h3 class="order-title">{{ order.name }}</h3>
+                            <span style="position:absolute; right:0; top:0; color:#888; font-size:1.05em;">Имя заказчика: {{ order.customer_id }}</span>
+                            <p class="order-description-new" style="word-break: break-word;">{{ order.description }}</p>
+                            <div class="order-meta-new">
+                                <span>Бюджет: {{ order.price }} руб.</span>
+                                <span>Откликов: {{ order.responses }}</span>
+                                <span>Срок: {{ order.term }} дн.</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="color:#888;font-size:1.2em;">У вас нет избранных заказов.</div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    {% include 'footer.html' %}
+    <script src="/assets/js/main.js"></script>
+</body>
+</html> 

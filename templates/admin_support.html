@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Служба поддержки | Админка</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+    {% include 'header.html' %}
+    <main class="main-content">
+        <h1>Служба поддержки</h1>
+        <section style="margin-bottom:2em;">
+            <h2>Обращения пользователей</h2>
+            <table style="width:100%; border-collapse:collapse;">
+                <tr style="background:#eee;"><th>Имя</th><th>Email</th><th>Сообщение</th><th>Статус</th><th>Дата</th><th></th></tr>
+                {% for req in contact_requests %}
+                <tr>
+                    <td>{{ req.name }}</td>
+                    <td>{{ req.email }}</td>
+                    <td>{{ req.message }}</td>
+                    <td>{% if req.status == 'answered' %}Ответ дан{% else %}Ожидает ответа{% endif %}</td>
+                    <td>{{ req.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td>
+                        {% if req.status != 'answered' %}
+                        <form method="post" action="/admin/support/close/{{ req.id }}" style="display:inline;">
+                            <button type="submit" class="apply-filters">Закрыть</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </section>
+        <section>
+            <h2>Рассылка сообщения всем пользователям</h2>
+            <form method="post" action="/admin/support/broadcast">
+                <textarea name="message" required maxlength="1000" style="width:100%;min-height:80px;margin-bottom:1em;"></textarea>
+                <button type="submit" class="apply-filters">Отправить сообщение</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html> 

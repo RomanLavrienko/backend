@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет | TeenFreelance</title>
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header.html' %}
+    <main class="main-content auth-container">
+        <div class="auth-card" style="max-width:700px;">
+            <h1>Личный кабинет</h1>
+            <div style="margin-bottom:1.5em; text-align:right;">
+                <a href="/favorites" class="apply-filters" style="padding:0.8em 2.2em;">Избранные заказы</a>
+            </div>
+            <div class="profile-section">
+                {% if user.photo %}
+                <div style="text-align:center; margin-bottom:1.2em;">
+                    <img src="/assets/images/{{ user.photo }}" alt="Фото профиля" style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
+                </div>
+                {% endif %}
+                <div class="form-group"><label>Имя:</label> <span>{{ user.name }}</span></div>
+                <div class="form-group"><label>Email:</label> <span>{{ user.email }}</span></div>
+                <div class="form-group"><label>Никнейм:</label> <span>{{ user.nickname }}</span></div>
+                <div class="form-group"><label>Статус email:</label> <span>{% if user.email_verified %}Подтверждён{% else %}Не подтверждён{% endif %}</span></div>
+                <div class="form-group"><label>Баланс:</label> <span>{{ user.balance }} ₽</span></div>
+                <div class="form-group"><label>Дата регистрации:</label> <span>{{ user.created_at.strftime('%d.%m.%Y %H:%M') }}</span></div>
+                <div class="form-group"><label>Рейтинг заказчика:</label> <span>{{ user.customer_rating }}</span></div>
+                <div class="form-group"><label>Рейтинг исполнителя:</label> <span>{{ user.executor_rating }}</span></div>
+                <div class="form-group"><label>Выполнено заказов:</label> <span>{{ user.done_count }}</span></div>
+                <div class="form-group"><label>Взято заказов:</label> <span>{{ user.taken_count }}</span></div>
+                <div class="form-group"><label>Описание:</label> <span>{{ user.description or 'Нет описания' }}</span></div>
+                <div style="display:flex; gap:1rem; margin-top:2rem;">
+                    <button class="auth-button" id="logout-btn">Выйти</button>
+                    <a href="/profile/edit" class="auth-button" style="background:#eee;color:#222;">Редактировать профиль</a>
+                </div>
+            </div>
+            <hr style="margin:2rem 0;">
+            <section class="user-orders">
+                <h2>Мои заказы</h2>
+                {% set current_orders = orders | selectattr('status', 'in', ['OPEN', 'WORK']) | list %}
+                {% set closed_orders = orders | selectattr('status', 'equalto', 'CLOSE') | list %}
+                <h3 style="margin-top:1em;">Текущие заказы</h3>
+                {% if current_orders %}
+                <div class="orders-list" id="orders-list">
+                    {% for order in current_orders %}
+                    <div class="profile-order-block">
+                        <div>
+                            <b>{{ order.title }}</b> — <p style="word-break: break-word;">{{ order.description }}</p><br>
+                            Бюджет: {{ order.price }} руб. | Статус: {{ order.status }}
+                        </div>
+                        <div style="margin-top:0.7em;">
+                            {% if order.status == 'OPEN' and order.can_close %}
+                                <a href="#" onclick="if(confirm('Вы уверены, что хотите закрыть заказ?')){ fetch('/orders/{{ order.id }}/close', {method: 'POST', credentials: 'same-origin'}).then(()=>location.reload()); } return false;">Закрыть заказ</a>
+                            {% endif %}
+                            <a href="/orders/{{ order.id }}/edit" style="font-weight:bold; margin-left:1.2em;">Редактировать</a>
+                            {% if order.status == 'WORK' %}
+                                <a href="/chat/{{ order.executor_id }}" style="font-weight:bold; margin-left:1.2em;">Перейти в чат</a>
+                            {% endif %}
+                        </div>
+                        <hr style="margin:1.2em 0;">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>Нет текущих заказов.</p>
+                {% endif %}
+                <h3 style="margin-top:2em;">Активные заказы как исполнитель</h3>
+                {% if active_exec %}
+                <div class="orders-list" id="orders-list-exec">
+                    {% for order in active_exec %}
+                    <div class="profile-order-block">
+                        <div>
+                            <b>{{ order.title }}</b> — <p style="word-break: break-word;">{{ order.description }}</p><br>
+                            Бюджет: {{ order.price }} руб. | Статус: {{ order.status }}
+                        </div>
+                        <div style="margin-top:0.7em;">
+                            {% if order.chat_id %}
+                            <a href="/chat/{{ order.chat_id }}" style="font-weight:bold; margin-left:1.2em;">Перейти в чат</a>
+                            {% else %}
+                            <span style="color:#c00;">Чат не найден</span>
+                            {% endif %}
+                        </div>
+                        <hr style="margin:1.2em 0;">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>Нет активных заказов как исполнитель.</p>
+                {% endif %}
+                <h3 style="margin-top:2em;">История заказов</h3>
+                {% if closed_orders %}
+                <div class="orders-list" id="orders-list-history">
+                    {% for order in closed_orders %}
+                    <div class="profile-order-block">
+                        <div>
+                            <b>{{ order.title }}</b> — <p style="word-break: break-word;">{{ order.description }}</p><br>
+                            Бюджет: {{ order.price }} руб. | Статус: {{ order.status }}
+                        </div>
+                        <hr style="margin:1.2em 0;">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>Нет завершённых заказов.</p>
+                {% endif %}
+            </section>
+            <div class="profile-extra">
+                <h2>Мои отзывы</h2>
+                {% if reviews and reviews|length > 0 %}
+                <div class="reviews-list">
+                    {% for review in reviews %}
+                    <div class="review-block" style="border:1px solid #eee; border-radius:8px; padding:1em; margin-bottom:1em;">
+                        <div style="color:#c00;">ID: {{ review.id }}</div>
+                        <b>Оценка:</b> {{ review.rate }}<br>
+                        <b>Тип:</b> {{ review.type }}<br>
+                        <b>Текст:</b> {{ review.text }}<br>
+                        <b>Заказ:</b> <a href="/orders/{{ review.order_id }}">#{{ review.order_id }}</a><br>
+                        <span style="color:#888; font-size:0.95em;">{{ review.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                        {% if review.response %}
+                            <div style="margin-top:0.7em; padding:0.7em; background:#f6fff6; border-radius:6px; border:1px solid #b3e6b3;">
+                                <b>Ответ владельца профиля:</b> {{ review.response }}
+                            </div>
+                        {% else %}
+                            <form class="review-response-form" data-review-id="{{ review.id }}" style="margin-top:0.7em;">
+                                <textarea name="response" required minlength="2" maxlength="100" style="width:100%;min-height:40px;"></textarea><br>
+                                <button type="submit" class="apply-filters">Ответить на отзыв</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div>Здесь будут ваши отзывы...</div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    {% include 'footer.html' %}
+    <script src="assets/js/main.js"></script>
+    <script>
+    document.getElementById('logout-btn').onclick = async function() {
+        await fetch('/api/logout', {method:'POST'});
+        window.location.href = '/login';
+    };
+    </script>
+    <script>
+    async function closeOrder(event, orderId) {
+        event.preventDefault();
+        const res = await fetch(`/orders/${orderId}/close`, {method: 'POST', credentials: 'same-origin'});
+        const data = await res.json();
+        if (data.success) {
+            // Удаляем заказ из DOM без перезагрузки
+            const el = document.getElementById('order-' + orderId);
+            if (el) el.remove();
+        } else {
+            alert(data.error || 'Ошибка при закрытии заказа');
+        }
+        return false;
+    }
+    </script>
+    <script>
+    document.addEventListener('submit', function(e) {
+        if (e.target.classList.contains('review-response-form')) {
+            e.preventDefault();
+            const form = e.target;
+            const reviewId = form.dataset.reviewId;
+            const formData = new FormData(form);
+            fetch(`/reviews/${reviewId}/response`, {method:'POST', body:formData, credentials:'same-origin'})
+                .then(resp => { if (resp.ok) location.reload(); else alert('Ошибка!'); });
+        }
+    });
+    </script>
+</body>
+</html> 

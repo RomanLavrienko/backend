@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать заказ | TeenFreelance</title>
+    <link rel="stylesheet" href="/assets/css/reset.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .create-order-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.10); max-width: 600px; margin: 3rem auto; padding: 2.5rem 2rem; }
+        .create-order-card h1 { text-align: center; margin-bottom: 2rem; }
+        .create-order-form { display: flex; flex-direction: column; gap: 1.5rem; }
+        .create-order-form input, .create-order-form textarea, .create-order-form select {
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1.1em;
+        }
+        .create-order-form textarea { min-height: 120px; resize: vertical; }
+        .create-order-btn {
+            background: #1ed760;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 1rem 2.2rem;
+            font-size: 1.1em;
+            border: none;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background 0.15s;
+        }
+        .create-order-btn:hover { background: #16b34a; }
+    </style>
+</head>
+<body>
+    {% include 'header.html' %}
+    <main class="main-content">
+        <div class="create-order-card">
+            <h1>Создать заказ</h1>
+            <form class="create-order-form" method="post" action="/orders/create">
+                <input type="text" name="title" id="title" required minlength="1" maxlength="30">
+                <textarea name="description" id="description" required minlength="1" maxlength="250"></textarea>
+                <input type="number" name="price" id="price" required min="400" max="400000">
+                <input type="number" name="term" id="term" required min="1" max="30">
+                <select name="category" required>
+                    <option value="">Выберите категорию</option>
+                    <option value="Дизайн">Дизайн</option>
+                    <option value="Программирование">Программирование</option>
+                    <option value="Копирайтинг">Копирайтинг</option>
+                </select>
+                <button type="submit" class="create-order-btn">Создать заказ</button>
+            </form>
+        </div>
+    </main>
+    {% include 'footer.html' %}
+    <script src="/assets/js/main.js"></script>
+</body>
+</html> 

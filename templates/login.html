@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | TeenFreelance</title>
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Verdana:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content auth-container">
+        <div class="auth-card">
+            <h1>Вход в аккаунт</h1>
+            <form class="auth-form" id="login-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" placeholder="Ваш email">
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" name="password" placeholder="Ваш пароль">
+                </div>
+                <button type="submit" class="auth-button">Войти</button>
+                <div class="auth-links">
+                    <a href="#">Забыли пароль?</a>
+                    <span>Нет аккаунта? <a href="/register">Зарегистрируйтесь</a></span>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <script src="assets/js/main.js"></script>
+    <script>
+document.getElementById('login-form').onsubmit = async function(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = new FormData(form);
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    body: data
+  });
+  const result = await res.json();
+  if (result.success) {
+    window.location.href = '/profile';
+  } else {
+    alert(result.error);
+  }
+};
+</script>
+</body>
+</html>
