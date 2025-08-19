@@ -799,6 +799,8 @@ async def favorites(request: Request, access_token: str = Cookie(None)):
 @router.get("/user/{nickname}", response_class=HTMLResponse)
 async def public_profile(nickname: str, request: Request, access_token: str = Cookie(None)):
     current_user_id = None
+    current_user_is_admin_or_support = False
+
     if access_token:
         try:
             payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -810,8 +812,13 @@ async def public_profile(nickname: str, request: Request, access_token: str = Co
                     current_user = await user_service.get_user_by_nickname(current_nickname)
                     if current_user:
                         current_user_id = current_user.id
+                        # Проверяем, является ли текущий пользователь админом или поддержкой
+                        current_user_is_admin_or_support = (current_nickname == ADMIN or
+                                                            (hasattr(current_user,
+                                                                     'is_support') and current_user.is_support))
         except Exception:
             pass
+
     async with AsyncSessionLocal() as session:
         from infrastructure.repositiry.db_models import UserORM, OrderORM, ReviewORM
         from sqlalchemy import select
@@ -819,19 +826,25 @@ async def public_profile(nickname: str, request: Request, access_token: str = Co
         user = user_result.scalar_one_or_none()
         if not user:
             return JSONResponse({"detail": "Not Found"}, status_code=404)
+
         orders_result = await session.execute(select(OrderORM).where(OrderORM.customer_id == user.id))
         user_orders = orders_result.scalars().all()
+
         reviews_result = await session.execute(select(ReviewORM).where(ReviewORM.recipient_id == user.id))
         reviews = list(reviews_result.scalars().all())
+
         executor_reviews = [r for r in reviews if r.type == 'executor']
         customer_reviews = [r for r in reviews if r.type == 'customer']
         executor_rating = round(sum(r.rate for r in executor_reviews) / len(executor_reviews),
                                 2) if executor_reviews else 0
         customer_rating = round(sum(r.rate for r in customer_reviews) / len(customer_reviews),
                                 2) if customer_reviews else 0
+
         return templates.TemplateResponse("user_profile.html",
                                           {"request": request, "user": user, "orders": user_orders, "reviews": reviews,
-                                           "current_user_id": current_user_id, "executor_rating": executor_rating,
+                                           "current_user_id": current_user_id,
+                                           "current_user_is_admin_or_support": current_user_is_admin_or_support,
+                                           "executor_rating": executor_rating,
                                            "customer_rating": customer_rating})
 
 
@@ -1034,7 +1047,7 @@ async def admin_verify_user(
         from infrastructure.repositiry.verification_repository import VerificationRepository
         repo = VerificationRepository(session)
         await repo.verify_by_admin(user_id)
-    return RedirectResponse("/admin/panel", status_code=303)
+    return RedirectResponse(url=f"/admin/user/{user_id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/admin", response_class=HTMLResponse)

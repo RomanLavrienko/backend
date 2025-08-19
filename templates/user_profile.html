@@ -35,6 +35,18 @@
                 <div style="color:#888;font-size:1.1em;margin-bottom:1.2em;">На платформе с {{
                     user.created_at.strftime('%d.%m.%Y') if user.created_at else '' }}
                 </div>
+
+                <!-- Кнопка админской верификации (только для админов и поддержки) -->
+                {% if current_user_is_admin_or_support and not user.admin_verified %}
+                <div style="margin-bottom:1.2em;">
+                    <form method="post" action="/admin/user/{{ user.id }}/admin_verify" style="display:inline;">
+                        <button type="submit" class="apply-filters" style="background-color:#1ed760;color:white;">
+                            Подтвердить пользователя
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
                 <div style="margin-bottom:1.2em;">
                     <span style="font-weight:500;">Рейтинг заказчика:</span> {{ customer_rating }}<br>
                     <span style="font-weight:500;">Рейтинг исполнителя:</span> {{ executor_rating }}<br>
@@ -144,4 +156,4 @@
     });
 </script>
 </body>
-</html> 
+</html>
